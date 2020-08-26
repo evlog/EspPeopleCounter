@@ -33,3 +33,26 @@ WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 //------
 //------
+
+// vl53l1 configruation and variables
+// -----
+// By default, this example blocks while waiting for sensor data to be ready.
+// Comment out this line to poll for data ready in a non-blocking way instead.
+//#define USE_BLOCKING_LOOP
+
+// Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
+#define MEASUREMENT_BUDGET_MS 50
+
+// Interval between measurements, set through
+// VL53L1_SetInterMeasurementPeriodMilliSeconds(). According to the API user
+// manual (rev 2), "the minimum inter-measurement period must be longer than the
+// timing budget + 4 ms." The STM32Cube example from ST uses 500 ms, but we
+// reduce this to 55 ms to allow faster readings.
+#define INTER_MEASUREMENT_PERIOD_MS 55
+
+VL53L1_Dev_t                   dev;
+VL53L1_DEV                     Dev = &dev;
+
+int status;
+// -----
+// -----

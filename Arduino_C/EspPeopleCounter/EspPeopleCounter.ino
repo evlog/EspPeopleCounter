@@ -2,6 +2,8 @@
 // -----
 #include <IotWebConf.h> // Library to handle WiFi AP configuration portal
 #include <PubSubClient.h> // Library for MQTT
+#include <Wire.h>
+#include "src/vl53l1x-st-api/vl53l1_api.h"
 #include "globals.h"
 // -----
 // -----
@@ -144,6 +146,48 @@ void setup() {
   mqttReconnect();
   //------
   //------
+
+  // vl53l1 configruation and variables
+  // -----
+  uint8_t byteData;
+  uint16_t wordData;
+
+  Wire.begin();
+  Wire.setClock(400000);
+
+  // This is the default 8-bit slave address (including R/W as the least
+  // significant bit) as expected by the API. Note that the Arduino Wire library
+  // uses a 7-bit address without the R/W bit instead (0x29 or 0b0101001).
+  Dev->I2cDevAddr = 0x52;
+
+  VL53L1_software_reset(Dev);
+
+  VL53L1_RdByte(Dev, 0x010F, &byteData);
+  Serial.print(F("VL53L1X Model_ID: "));
+  Serial.println(byteData, HEX);
+  VL53L1_RdByte(Dev, 0x0110, &byteData);
+  Serial.print(F("VL53L1X Module_Type: "));
+  Serial.println(byteData, HEX);
+  VL53L1_RdWord(Dev, 0x010F, &wordData);
+  Serial.print(F("VL53L1X: "));
+  Serial.println(wordData, HEX);
+
+  Serial.println(F("Autonomous Ranging Test"));
+  status = VL53L1_WaitDeviceBooted(Dev);
+  status = VL53L1_DataInit(Dev);
+  status = VL53L1_StaticInit(Dev);
+  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
+  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);
+  status = VL53L1_StartMeasurement(Dev);
+
+  if(status)
+  {
+    Serial.println(F("VL53L1_StartMeasurement failed"));
+    while(1);
+  }
+  // -----
+  // -----
 }
 
 void loop() {
