@@ -53,6 +53,21 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if (DEBUG) Serial.println("MQTT communication established.");
     }
   }
+  else if (topic_str == mqttPeopleResetTopic) {
+    if (message == "true") {
+      peopleCounter = 0;
+      client.publish(mqttPeopleResetTopic, "1");
+      if (DEBUG) Serial.println("mqttPeopleResetTopic -> true");
+    }
+  }
+  else if (topic_str == mqttSensorRebootTopic) {
+    if (message == "true") {
+      client.publish(mqttSensorRebootTopic, "1");
+      if (DEBUG) Serial.println("mqttSensorRebootTopic -> true");
+      delay(1000);
+      ESP.reset();
+    }
+  }
 
   //------
   //------
@@ -66,7 +81,11 @@ void topicSubscribe() {
 
     Serial.println(mqttDebugTopic);
     client.subscribe(mqttDebugTopic);
-    
+    Serial.println(mqttPeopleResetTopic);
+    client.subscribe(mqttPeopleResetTopic);
+    Serial.println(mqttSensorRebootTopic);
+    client.subscribe(mqttSensorRebootTopic);
+  
     client.loop();
   }  
 }
@@ -139,6 +158,8 @@ void setup() {
 
   // Define MQTT topic names
   sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
+  sprintf(mqttPeopleResetTopic, "%s%s", MAC_ADDRESS, MQTT_PEOPLE_RESET_TOPIC);
+  sprintf(mqttSensorRebootTopic, "%s%s", MAC_ADDRESS, MQTT_SENSOR_REBOOT_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
@@ -184,7 +205,7 @@ void setup() {
   if(status)
   {
     Serial.println(F("VL53L1_StartMeasurement failed"));
-    while(1);
+    //while(1);
   }
   // -----
   // -----
@@ -192,9 +213,29 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Serial.println("Publish");
-  client.publish(mqttDebugTopic, "Hello server");
-  delay(5000);
+
+  // If reset connection is lost reset after 20sec.
+  //------
+  if (WiFi.status() != WL_CONNECTED) {
+    delay(20000);
+
+    if (WiFi.status() != WL_CONNECTED)
+      ESP.reset();
+  }
+  //------
+  //------
+  
+  // Reconnect to MQTT broker if not connected
+  //------
+  if (!client.connected()) {
+    mqttReconnect();
+  }
+  //------
+  //------
+
+
+  // Keep MQTT connection active
+  client.loop();
 
 
 }
