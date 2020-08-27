@@ -8,6 +8,14 @@
 // -----
 // -----
 
+boolean isValidNumber(String str){
+   for(byte i=0;i<str.length();i++)
+   {
+      if(isDigit(str.charAt(i))) return true;
+        }
+   return false;
+} 
+
 // Function to handle AP WiFi manager configuration page
 void handleRoot()
 {
@@ -56,18 +64,41 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttPeopleResetTopic) {
     if (message == "true") {
       peopleCounter = 0;
-      client.publish(mqttPeopleResetTopic, "1");
+      client.publish(mqttPeopleResetTopic, "OK");
       if (DEBUG) Serial.println("mqttPeopleResetTopic -> true");
     }
   }
   else if (topic_str == mqttSensorRebootTopic) {
     if (message == "true") {
-      client.publish(mqttSensorRebootTopic, "1");
+      client.publish(mqttSensorRebootTopic, "OK");
       if (DEBUG) Serial.println("mqttSensorRebootTopic -> true");
       delay(1000);
       ESP.reset();
     }
   }
+  else if (topic_str == mqttMeasurementBudgetTopic) {
+    if (isValidNumber(message)) {
+      MEASUREMENT_BUDGET_MS = message.toInt();
+      VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
+      client.publish(mqttMeasurementBudgetTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttMeasurementBudgetTopic -> ");
+        Serial.println(MEASUREMENT_BUDGET_MS);
+      }
+    }
+  }
+  else if (topic_str == mqttMeasurementPeriodTopic) {
+    if (isValidNumber(message)) {
+      INTER_MEASUREMENT_PERIOD_MS = message.toInt();
+      VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);     
+      client.publish(mqttMeasurementBudgetTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttMeasurementPeriodTopic -> ");
+        Serial.println(INTER_MEASUREMENT_PERIOD_MS);
+      }
+    }
+  }
+
 
   //------
   //------
@@ -85,7 +116,10 @@ void topicSubscribe() {
     client.subscribe(mqttPeopleResetTopic);
     Serial.println(mqttSensorRebootTopic);
     client.subscribe(mqttSensorRebootTopic);
-  
+    Serial.println(mqttMeasurementBudgetTopic);
+    client.subscribe(mqttMeasurementBudgetTopic);
+    Serial.println(mqttMeasurementPeriodTopic);
+    client.subscribe(mqttMeasurementPeriodTopic);  
     client.loop();
   }  
 }
@@ -116,6 +150,8 @@ void setup() {
   // put your setup code here, to run once:
    Serial.begin (115200);  
    Serial.println("Serial comm established");
+   Serial.print("Sensor MAC address: ");
+   Serial.println(MAC_ADDRESS);
 
   // AP WiFi manager setup
   //---
@@ -152,14 +188,16 @@ void setup() {
   // -----
   // -----  
 
-  // Connect to MQTT broker and subscribe to topics
+  // Connect to MQTT broker and subscribe to topics 
   //------
   client.setCallback(mqttCallback);
 
   // Define MQTT topic names
   sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
-  sprintf(mqttPeopleResetTopic, "%s%s", MAC_ADDRESS, MQTT_PEOPLE_RESET_TOPIC);
-  sprintf(mqttSensorRebootTopic, "%s%s", MAC_ADDRESS, MQTT_SENSOR_REBOOT_TOPIC);
+  sprintf(mqttPeopleResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_RESET_TOPIC);
+  sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
+  sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
+  sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 

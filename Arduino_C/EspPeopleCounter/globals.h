@@ -20,7 +20,7 @@ IotWebConf iotWebConf(thingName, &dnsServer, &server, wifiInitialApPassword);
 // MQTT connection parameters
 //*** Replace with your own MQTT username and password 
 //------
-const char* MAC_ADDRESS = "123456";
+String MAC_ADDRESS = WiFi.macAddress(); 
 
 const char* MQTT_USERNAME = "pi";
 const char* MQTT_PASSWORD = "rjaxtarmas1";
@@ -31,11 +31,17 @@ const char* MQTT_ADDRESS = "evlog.zapto.org";
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
 
-const char* MQTT_PEOPLE_RESET_TOPIC = "/people/reset";
+const char* MQTT_PEOPLE_RESET_TOPIC = "people/reset";
 char mqttPeopleResetTopic[150];
 
-const char* MQTT_SENSOR_REBOOT_TOPIC = "/sensor/reboot";
+const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";
 char mqttSensorRebootTopic[150];
+
+const char* MQTT_MEASUREMENT_BUDGET_TOPIC = "measurementBudget";
+char mqttMeasurementBudgetTopic[150];
+
+const char* MQTT_MEASUREMENT_PERIOD_TOPIC = "measurementPeriod";
+char mqttMeasurementPeriodTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
@@ -52,14 +58,14 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 //#define USE_BLOCKING_LOOP
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-#define MEASUREMENT_BUDGET_MS 50
+uint32_t MEASUREMENT_BUDGET_MS = 50;
 
 // Interval between measurements, set through
 // VL53L1_SetInterMeasurementPeriodMilliSeconds(). According to the API user
 // manual (rev 2), "the minimum inter-measurement period must be longer than the
 // timing budget + 4 ms." The STM32Cube example from ST uses 500 ms, but we
 // reduce this to 55 ms to allow faster readings.
-#define INTER_MEASUREMENT_PERIOD_MS 55
+uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
 
 VL53L1_Dev_t                   dev;
 VL53L1_DEV                     Dev = &dev;
