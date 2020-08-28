@@ -16,6 +16,61 @@ boolean isValidNumber(String str){
    return false;
 } 
 
+// vl53l1 configruation and variables
+void vl531Init() {
+  
+  uint8_t byteData;
+  uint16_t wordData;
+
+  uint8_t zone = 0;
+
+  // This is the default 8-bit slave address (including R/W as the least
+  // significant bit) as expected by the API. Note that the Arduino Wire library
+  // uses a 7-bit address without the R/W bit instead (0x29 or 0b0101001).
+  Dev->I2cDevAddr = 0x52;
+
+  VL53L1_software_reset(Dev);
+
+  if (zone == 0) {
+    roiConfig.TopLeftX = 4;
+    roiConfig.TopLeftY = 11;
+    roiConfig.BotRightX = 11;
+    roiConfig.BotRightY = 4;
+  }
+  else if (zone == 1) {
+    roiConfig.TopLeftX = 4;
+    roiConfig.TopLeftY = 11;
+    roiConfig.BotRightX = 11;
+    roiConfig.BotRightY = 4;
+  }
+
+  VL53L1_RdByte(Dev, 0x010F, &byteData);
+  Serial.print(F("VL53L1X Model_ID: "));
+  Serial.println(byteData, HEX);
+  VL53L1_RdByte(Dev, 0x0110, &byteData);
+  Serial.print(F("VL53L1X Module_Type: "));
+  Serial.println(byteData, HEX);
+  VL53L1_RdWord(Dev, 0x010F, &wordData);
+  Serial.print(F("VL53L1X: "));
+  Serial.println(wordData, HEX);
+
+  Serial.println(F("Autonomous Ranging Test"));
+  status = VL53L1_WaitDeviceBooted(Dev);
+  status = VL53L1_DataInit(Dev);
+  status = VL53L1_StaticInit(Dev);
+  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
+  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);
+  status = VL53L1_SetUserROI(Dev, &roiConfig);
+  status = VL53L1_StartMeasurement(Dev);
+
+  if(status)
+  {
+    Serial.println(F("VL53L1_StartMeasurement failed"));
+    //while(1);
+  }
+}
+
 // Function to handle AP WiFi manager configuration page
 void handleRoot()
 {
@@ -79,7 +134,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttMeasurementBudgetTopic) {
     if (isValidNumber(message)) {
       MEASUREMENT_BUDGET_MS = message.toInt();
-      VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
+      // Initialize sensor with new congig. value 
+      vl531Init(); 
       client.publish(mqttMeasurementBudgetTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementBudgetTopic -> ");
@@ -90,7 +146,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttMeasurementPeriodTopic) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
-      VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);     
+      // Initialize sensor with new congig. value 
+      vl531Init();    
       client.publish(mqttMeasurementBudgetTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementPeriodTopic -> ");
@@ -120,6 +177,8 @@ void topicSubscribe() {
     client.subscribe(mqttMeasurementBudgetTopic);
     Serial.println(mqttMeasurementPeriodTopic);
     client.subscribe(mqttMeasurementPeriodTopic);  
+    Serial.println(mqttDistanceMeasurementTopic);
+    client.subscribe(mqttDistanceMeasurementTopic);  
     client.loop();
   }  
 }
@@ -144,6 +203,62 @@ void mqttReconnect() {
       delay(5000);
     }
   }
+}
+
+// Check sensor status and get measurements
+VL53L1_RangingMeasurementData_t checkGetRangingData() {
+  static uint16_t startMs = millis();
+  uint8_t isReady;
+  static VL53L1_RangingMeasurementData_t rangingData;
+  
+  // non-blocking for sensor data
+  status = VL53L1_GetMeasurementDataReady(Dev, &isReady);
+
+  if(!status)
+  {
+    if(isReady)
+    {
+      rangingData = printRangingData();
+      VL53L1_ClearInterruptAndStartMeasurement(Dev);
+      startMs = millis();
+    }
+    else if((uint16_t)(millis() - startMs) > VL53L1_RANGE_COMPLETION_POLLING_TIMEOUT_MS)
+    {
+      Serial.print(F("Timeout waiting for data ready."));
+      VL53L1_ClearInterruptAndStartMeasurement(Dev);
+      startMs = millis();
+    }
+  }
+  else
+  {
+    Serial.print(F("Error getting data ready: "));
+    Serial.println(status);
+  }
+
+  // Optional polling delay; should be smaller than INTER_MEASUREMENT_PERIOD_MS,
+  // and MUST be smaller than VL53L1_RANGE_COMPLETION_POLLING_TIMEOUT_MS
+  delay(10);
+
+  return rangingData;
+}
+
+// Get ranging data from sensor
+VL53L1_RangingMeasurementData_t printRangingData() {
+  static VL53L1_RangingMeasurementData_t RangingData;
+
+  status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
+  if(!status)
+  {
+    Serial.print(RangingData.RangeStatus);
+    Serial.print(F(","));
+    Serial.print(RangingData.RangeMilliMeter);
+    Serial.print(F(","));
+    Serial.print(RangingData.SignalRateRtnMegaCps/65536.0);
+    Serial.print(F(","));
+    Serial.println(RangingData.AmbientRateRtnMegaCps/65336.0); 
+  }
+
+  return RangingData; 
 }
 
 void setup() {
@@ -214,43 +329,16 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000);
 
-  // This is the default 8-bit slave address (including R/W as the least
-  // significant bit) as expected by the API. Note that the Arduino Wire library
-  // uses a 7-bit address without the R/W bit instead (0x29 or 0b0101001).
-  Dev->I2cDevAddr = 0x52;
-
-  VL53L1_software_reset(Dev);
-
-  VL53L1_RdByte(Dev, 0x010F, &byteData);
-  Serial.print(F("VL53L1X Model_ID: "));
-  Serial.println(byteData, HEX);
-  VL53L1_RdByte(Dev, 0x0110, &byteData);
-  Serial.print(F("VL53L1X Module_Type: "));
-  Serial.println(byteData, HEX);
-  VL53L1_RdWord(Dev, 0x010F, &wordData);
-  Serial.print(F("VL53L1X: "));
-  Serial.println(wordData, HEX);
-
-  Serial.println(F("Autonomous Ranging Test"));
-  status = VL53L1_WaitDeviceBooted(Dev);
-  status = VL53L1_DataInit(Dev);
-  status = VL53L1_StaticInit(Dev);
-  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
-  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
-  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);
-  status = VL53L1_StartMeasurement(Dev);
-
-  if(status)
-  {
-    Serial.println(F("VL53L1_StartMeasurement failed"));
-    //while(1);
-  }
-  // -----
-  // -----
+  // Initialize sensor 
+  vl531Init();
 }
+
+
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+
 
   // If reset connection is lost reset after 20sec.
   //------
@@ -270,6 +358,7 @@ void loop() {
   }
   //------
   //------
+
 
 
   // Keep MQTT connection active

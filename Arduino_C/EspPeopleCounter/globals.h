@@ -43,6 +43,9 @@ char mqttMeasurementBudgetTopic[150];
 const char* MQTT_MEASUREMENT_PERIOD_TOPIC = "measurementPeriod";
 char mqttMeasurementPeriodTopic[150];
 
+const char* MQTT_DISTANCE_MEASUREMENT_TOPIC = "distanceMeasurement";
+char mqttDistanceMeasurementTopic[150];
+
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
 
@@ -69,6 +72,8 @@ uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
 
 VL53L1_Dev_t                   dev;
 VL53L1_DEV                     Dev = &dev;
+
+VL53L1_UserRoi_t roiConfig;
 
 int status;
 // -----
