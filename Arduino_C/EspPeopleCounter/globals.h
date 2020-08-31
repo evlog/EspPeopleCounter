@@ -43,6 +43,12 @@ char mqttMeasurementBudgetTopic[150];
 const char* MQTT_MEASUREMENT_PERIOD_TOPIC = "measurementPeriod";
 char mqttMeasurementPeriodTopic[150];
 
+const char* MQTT_ROI_CONFIG1_TOPIC = "roiConfig1";
+char mqttRoiConfig1Topic[150];
+
+const char* MQTT_ROI_CONFIG2_TOPIC = "roiConfig2";
+char mqttRoiConfig2Topic[150];
+
 const char* MQTT_DISTANCE_MEASUREMENT_TOPIC = "distanceMeasurement";
 char mqttDistanceMeasurementTopic[150];
 
@@ -69,6 +75,18 @@ uint32_t MEASUREMENT_BUDGET_MS = 50;
 // timing budget + 4 ms." The STM32Cube example from ST uses 500 ms, but we
 // reduce this to 55 ms to allow faster readings.
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
+
+// Define ROI config1
+uint32_t config1TopLeftX = 0;
+uint32_t config1TopLeftY = 0; 
+uint32_t config1BottomRightX = 0; 
+uint32_t config1BottomRightY = 0;
+
+// Define ROI config2
+uint32_t config2TopLeftX = 0;
+uint32_t config2TopLeftY = 0; 
+uint32_t config2BottomRightX = 0; 
+uint32_t config2BottomRightY = 0;
 
 VL53L1_Dev_t                   dev;
 VL53L1_DEV                     Dev = &dev;

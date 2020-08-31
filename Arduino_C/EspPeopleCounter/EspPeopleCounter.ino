@@ -3,6 +3,7 @@
 #include <IotWebConf.h> // Library to handle WiFi AP configuration portal
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
+#include <StringSplitter.h>
 #include "src/vl53l1x-st-api/vl53l1_api.h"
 #include "globals.h"
 // -----
@@ -31,17 +32,17 @@ void vl531Init() {
 
   VL53L1_software_reset(Dev);
 
-  if (zone == 0) {
-    roiConfig.TopLeftX = 4;
-    roiConfig.TopLeftY = 11;
-    roiConfig.BotRightX = 11;
-    roiConfig.BotRightY = 4;
+  if (zone == 1) {
+    roiConfig.TopLeftX = config1TopLeftX;
+    roiConfig.TopLeftY = config2TopLeftY;
+    roiConfig.BotRightX = config2BottomRightX;
+    roiConfig.BotRightY = config2BottomRightY;
   }
-  else if (zone == 1) {
-    roiConfig.TopLeftX = 4;
-    roiConfig.TopLeftY = 11;
-    roiConfig.BotRightX = 11;
-    roiConfig.BotRightY = 4;
+  else if (zone == 2) {
+    roiConfig.TopLeftX = config2TopLeftX;
+    roiConfig.TopLeftY = config2TopLeftY;
+    roiConfig.BotRightX = config2BottomRightX;
+    roiConfig.BotRightY = config2BottomRightY;
   }
 
   VL53L1_RdByte(Dev, 0x010F, &byteData);
@@ -155,6 +156,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+  else if (topic_str == mqttRoiConfig1Topic) {
+    String roiConfig1 = message;
+    StringSplitter *splitter = new StringSplitter(roiConfig1, ',', 2);       
+    client.publish(mqttRoiConfig1Topic, "OK");
+
+    int itemCount = splitter->getItemCount();
+    Serial.println("Item count: " + String(itemCount));
+    Serial.println(splitter->getItemAtIndex(0));
+  }
 
 
   //------
@@ -176,8 +186,12 @@ void topicSubscribe() {
     Serial.println(mqttMeasurementBudgetTopic);
     client.subscribe(mqttMeasurementBudgetTopic);
     Serial.println(mqttMeasurementPeriodTopic);
-    client.subscribe(mqttMeasurementPeriodTopic);  
-    Serial.println(mqttDistanceMeasurementTopic);
+    client.subscribe(mqttMeasurementPeriodTopic);
+    Serial.println(mqttRoiConfig1Topic); 
+    client.subscribe(mqttRoiConfig1Topic);    
+    Serial.println(mqttRoiConfig2Topic); 
+    client.subscribe(mqttRoiConfig2Topic);  
+    Serial.println(mqttDistanceMeasurementTopic); 
     client.subscribe(mqttDistanceMeasurementTopic);  
     client.loop();
   }  
