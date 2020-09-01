@@ -18,12 +18,11 @@ boolean isValidNumber(String str){
 } 
 
 // vl53l1 configruation and variables
-void vl531Init() {
+void vl531Init(uint8_t zone) {
   
   uint8_t byteData;
   uint16_t wordData;
 
-  uint8_t zone = 0;
 
   // This is the default 8-bit slave address (including R/W as the least
   // significant bit) as expected by the API. Note that the Arduino Wire library
@@ -136,7 +135,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (isValidNumber(message)) {
       MEASUREMENT_BUDGET_MS = message.toInt();
       // Initialize sensor with new congig. value 
-      vl531Init(); 
+      vl531Init(1); 
       client.publish(mqttMeasurementBudgetTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementBudgetTopic -> ");
@@ -148,7 +147,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
       // Initialize sensor with new congig. value 
-      vl531Init();    
+      vl531Init(1);    
       client.publish(mqttMeasurementBudgetTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementPeriodTopic -> ");
@@ -157,16 +156,63 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   }
   else if (topic_str == mqttRoiConfig1Topic) {
-    String roiConfig1 = message;
-    StringSplitter *splitter = new StringSplitter(roiConfig1, ',', 2);       
-    client.publish(mqttRoiConfig1Topic, "OK");
+    if (message.length() > 4) {
+      String roiConfig1 = message;
+      String p0, p1, p2, p3;
+      StringSplitter *splitter = new StringSplitter(roiConfig1, ',', 4);
 
-    int itemCount = splitter->getItemCount();
-    Serial.println("Item count: " + String(itemCount));
-    Serial.println(splitter->getItemAtIndex(0));
+      //Read config1 ROI parameters
+      p0 = splitter->getItemAtIndex(0);
+      p1 = splitter->getItemAtIndex(1);
+      p2 = splitter->getItemAtIndex(2);
+      p3 = splitter->getItemAtIndex(3); 
+      config1TopLeftX = p0.toInt();
+      config1TopLeftY = p1.toInt();
+      config1BottomRightX = p2.toInt();
+      config1BottomRightY = p3.toInt(); 
+      Serial.println(config1TopLeftX);  
+      Serial.println(config1TopLeftY);
+      Serial.println(config1BottomRightX);
+      Serial.println(config1BottomRightY);
+      vl531Init(1);
+      client.publish(mqttRoiConfig1Topic, "OK");  
+    }
   }
+  else if (topic_str == mqttRoiConfig2Topic) {
+    if (message.length() > 4) {
+      String roiConfig2 = message;
+      String p0, p1, p2, p3;
+      StringSplitter *splitter = new StringSplitter(roiConfig2, ',', 4);
 
-
+      //Read config1 ROI parameters
+      p0 = splitter->getItemAtIndex(0);
+      p1 = splitter->getItemAtIndex(1);
+      p2 = splitter->getItemAtIndex(2);
+      p3 = splitter->getItemAtIndex(3); 
+      config2TopLeftX = p0.toInt();
+      config2TopLeftY = p1.toInt();
+      config2BottomRightX = p2.toInt();
+      config2BottomRightY = p3.toInt(); 
+      Serial.println(config2TopLeftX);  
+      Serial.println(config2TopLeftY);
+      Serial.println(config2BottomRightX);
+      Serial.println(config2BottomRightY);
+      vl531Init(2);
+      client.publish(mqttRoiConfig2Topic, "OK");  
+    }
+  }
+  else if (topic_str == mqttDistanceMeasurementTopic) {
+    if (isValidNumber(message)) {
+      INTER_MEASUREMENT_PERIOD_MS = message.toInt();
+      // Initialize sensor with new congig. value 
+      vl531Init(1);    
+      client.publish(mqttMeasurementBudgetTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttMeasurementPeriodTopic -> ");
+        Serial.println(INTER_MEASUREMENT_PERIOD_MS);
+      }
+    }
+  }
   //------
   //------
 }
@@ -327,6 +373,9 @@ void setup() {
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
+  sprintf(mqttRoiConfig1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG1_TOPIC);
+  sprintf(mqttRoiConfig2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG2_TOPIC);
+  sprintf(mqttDistanceMeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MEASUREMENT_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
@@ -343,8 +392,8 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000);
 
-  // Initialize sensor 
-  vl531Init();
+  // Initialize sensor for zone 1
+  vl531Init(1);
 }
 
 
@@ -352,7 +401,10 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-
+  static VL53L1_RangingMeasurementData_t RangingData;
+  char temp[50];
+  String temp_str;
+  unsigned long currentMillis = 0;
 
   // If reset connection is lost reset after 20sec.
   //------
@@ -373,7 +425,17 @@ void loop() {
   //------
   //------
 
-
+  currentMillis = millis();
+  // Check and publish every 1sec. the distance measurement for zone 1 and 2
+  //------
+  if ((currentMillis - measPreviousMillis) >=  10000) {
+    RangingData = checkGetRangingData();
+    temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
+    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+    client.publish(mqttDistanceMeasurementTopic, temp);  
+  }
+  //------
+  //------
 
   // Keep MQTT connection active
   client.loop();

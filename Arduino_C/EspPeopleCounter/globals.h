@@ -1,5 +1,7 @@
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 
+unsigned long measPreviousMillis = 0;
+
 unsigned long peopleCounter = 0;
 
 // AP WiFi manager setup
