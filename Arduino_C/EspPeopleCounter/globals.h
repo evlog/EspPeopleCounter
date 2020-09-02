@@ -51,8 +51,11 @@ char mqttRoiConfig1Topic[150];
 const char* MQTT_ROI_CONFIG2_TOPIC = "roiConfig2";
 char mqttRoiConfig2Topic[150];
 
-const char* MQTT_DISTANCE_MEASUREMENT_TOPIC = "distanceMeasurement";
-char mqttDistanceMeasurementTopic[150];
+const char* MQTT_DISTANCE1_MEASUREMENT_TOPIC = "distance1Measurement";
+char mqttDistance1MeasurementTopic[150];
+
+const char* MQTT_DISTANCE2_MEASUREMENT_TOPIC = "distance2Measurement";
+char mqttDistance2MeasurementTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received

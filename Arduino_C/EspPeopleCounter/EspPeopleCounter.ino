@@ -174,7 +174,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(config1TopLeftY);
       Serial.println(config1BottomRightX);
       Serial.println(config1BottomRightY);
-      vl531Init(1);
+      vl531Init(1); // Initialize sensor for zone 1
       client.publish(mqttRoiConfig1Topic, "OK");  
     }
   }
@@ -197,11 +197,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(config2TopLeftY);
       Serial.println(config2BottomRightX);
       Serial.println(config2BottomRightY);
-      vl531Init(2);
+      vl531Init(2); // Initialize sensor for zone 2
       client.publish(mqttRoiConfig2Topic, "OK");  
     }
   }
-  else if (topic_str == mqttDistanceMeasurementTopic) {
+  /*else if (topic_str == mqttDistance1MeasurementTopic) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
       // Initialize sensor with new congig. value 
@@ -212,7 +212,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         Serial.println(INTER_MEASUREMENT_PERIOD_MS);
       }
     }
-  }
+  }*/
   //------
   //------
 }
@@ -237,8 +237,10 @@ void topicSubscribe() {
     client.subscribe(mqttRoiConfig1Topic);    
     Serial.println(mqttRoiConfig2Topic); 
     client.subscribe(mqttRoiConfig2Topic);  
-    Serial.println(mqttDistanceMeasurementTopic); 
-    client.subscribe(mqttDistanceMeasurementTopic);  
+    Serial.println(mqttDistance1MeasurementTopic); 
+    client.subscribe(mqttDistance1MeasurementTopic);  
+    Serial.println(mqttDistance2MeasurementTopic); 
+    client.subscribe(mqttDistance2MeasurementTopic); 
     client.loop();
   }  
 }
@@ -375,7 +377,8 @@ void setup() {
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
   sprintf(mqttRoiConfig1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG1_TOPIC);
   sprintf(mqttRoiConfig2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG2_TOPIC);
-  sprintf(mqttDistanceMeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MEASUREMENT_TOPIC);
+  sprintf(mqttDistance1MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE1_MEASUREMENT_TOPIC);
+  sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
@@ -400,7 +403,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+  bool distance1Flag = false;
+  bool distance2Flag = false;
   static VL53L1_RangingMeasurementData_t RangingData;
   char temp[50];
   String temp_str;
@@ -429,10 +433,47 @@ void loop() {
   // Check and publish every 1sec. the distance measurement for zone 1 and 2
   //------
   if ((currentMillis - measPreviousMillis) >=  10000) {
+    
+    vl531Init(1); // Initialize sensor for zone 1 
+    delay(500);
+    RangingData = checkGetRangingData();  
+
+    if (RangingData.RangeMilliMeter != 0) { // Check if we got meaningful distance data
+      distance1Flag = true;
+      
+      temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
+
+      // Add timestamp to distance measurement
+      temp_str.concat(',');
+      temp_str(String(millis()));
+      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+ 
+      client.publish(mqttDistance1MeasurementTopic, temp);  
+    }
+
+    vl531Init(2); // Initialize sensor for zone 2
+    delay(500);
     RangingData = checkGetRangingData();
-    temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
-    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
-    client.publish(mqttDistanceMeasurementTopic, temp);  
+
+    if (RangingData.RangeMilliMeter != 0) { // Check if we got meaningful distance data
+      distance2Flag = true;
+      
+      temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
+
+      // Add timestamp to distance measurement
+      temp_str.concat(',');
+      temp_str(String(millis()));
+      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+     
+      client.publish(mqttDistance2MeasurementTopic, temp); 
+    }
+  }
+
+  if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2
+  }
+    
   }
   //------
   //------
