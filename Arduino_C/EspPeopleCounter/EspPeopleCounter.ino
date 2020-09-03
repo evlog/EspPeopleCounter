@@ -123,6 +123,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if (DEBUG) Serial.println("mqttPeopleResetTopic -> true");
     }
   }
+  else if (topic_str == mqttPeopleCountThresholdTopic) {
+    if (isValidNumber(message)) {
+      PEOPLE_COUNT_THRESHOLD_MM = message.toInt();
+      // Initialize sensor with new congig. value 
+      vl531Init(1); 
+      client.publish(mqttPeopleCountThresholdTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttPeopleCountThresholdTopic -> ");
+        Serial.println(PEOPLE_COUNT_THRESHOLD_MM);
+      }
+    }
+  }
   else if (topic_str == mqttSensorRebootTopic) {
     if (message == "true") {
       client.publish(mqttSensorRebootTopic, "OK");
@@ -226,8 +238,10 @@ void topicSubscribe() {
     Serial.println(mqttDebugTopic);
     client.subscribe(mqttDebugTopic);
     Serial.println(mqttPeopleResetTopic);
-    client.subscribe(mqttPeopleResetTopic);
-    Serial.println(mqttSensorRebootTopic);
+    client.subscribe(mqttPeopleResetTopic);      
+    Serial.println(mqttPeopleCountThresholdTopic);
+    client.subscribe(mqttPeopleCountThresholdTopic); 
+    Serial.println(mqttSensorRebootTopic);    
     client.subscribe(mqttSensorRebootTopic);
     Serial.println(mqttMeasurementBudgetTopic);
     client.subscribe(mqttMeasurementBudgetTopic);
@@ -323,6 +337,104 @@ VL53L1_RangingMeasurementData_t printRangingData() {
   return RangingData; 
 }
 
+int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
+    static int PathTrack[] = {0,0,0,0};
+    static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
+    static int LeftPreviousStatus = NOBODY;
+    static int RightPreviousStatus = NOBODY;
+    //static int PeopleCount = 0;
+
+    int CurrentZoneStatus = NOBODY;
+    int AllZonesCurrentStatus = 0;
+    int AnEventHasOccured = 0;
+
+  if (Distance < PEOPLE_COUNT_THRESHOLD_MM) {
+    // Someone is in !
+    CurrentZoneStatus = SOMEONE;
+  }
+
+  // left zone
+  if (zone == 0) {
+
+    if (CurrentZoneStatus != LeftPreviousStatus) {
+      // event in left zone has occured
+      AnEventHasOccured = 1;
+
+      if (CurrentZoneStatus == SOMEONE) {
+        AllZonesCurrentStatus += 1;
+      }
+      // need to check right zone as well ...
+      if (RightPreviousStatus == SOMEONE) {
+        // event in left zone has occured
+        AllZonesCurrentStatus += 2;
+      }
+      // remember for next time
+      LeftPreviousStatus = CurrentZoneStatus;
+    }
+  }
+  // right zone
+  else {
+
+    if (CurrentZoneStatus != RightPreviousStatus) {
+
+      // event in left zone has occured
+      AnEventHasOccured = 1;
+      if (CurrentZoneStatus == SOMEONE) {
+        AllZonesCurrentStatus += 2;
+      }
+      // need to left right zone as well ...
+      if (LeftPreviousStatus == SOMEONE) {
+        // event in left zone has occured
+        AllZonesCurrentStatus += 1;
+      }
+      // remember for next time
+      RightPreviousStatus = CurrentZoneStatus;
+    }
+  }
+
+  // if an event has occured
+  if (AnEventHasOccured) {
+    if (PathTrackFillingSize < 4) {
+      PathTrackFillingSize ++;
+    }
+
+    // if nobody anywhere lets check if an exit or entry has happened
+    if ((LeftPreviousStatus == NOBODY) && (RightPreviousStatus == NOBODY)) {
+
+      // check exit or entry only if PathTrackFillingSize is 4 (for example 0 1 3 2) and last event is 0 (nobobdy anywhere)
+      if (PathTrackFillingSize == 4) {
+        // check exit or entry. no need to check PathTrack[0] == 0 , it is always the case
+
+        if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
+          // This an entry
+          peopleCounter ++;
+
+        } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
+          // This an exit
+          peopleCounter --;
+        }
+      }
+
+      PathTrackFillingSize = 1;
+    }
+    else {
+      // update PathTrack
+      // example of PathTrack update
+      // 0
+      // 0 1
+      // 0 1 3
+      // 0 1 3 1
+      // 0 1 3 3
+      // 0 1 3 2 ==> if next is 0 : check if exit
+      PathTrack[PathTrackFillingSize-1] = AllZonesCurrentStatus;
+    }
+  }
+
+  // output debug data to main host machine
+  return(peopleCounter);
+
+}
+
 void setup() {
   // put your setup code here, to run once:
    Serial.begin (115200);  
@@ -371,7 +483,8 @@ void setup() {
 
   // Define MQTT topic names
   sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
-  sprintf(mqttPeopleResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_RESET_TOPIC);
+  sprintf(mqttPeopleResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_RESET_TOPIC);   
+  sprintf(mqttPeopleCountThresholdTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC);
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
@@ -398,8 +511,6 @@ void setup() {
   // Initialize sensor for zone 1
   vl531Init(1);
 }
-
-
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -430,9 +541,9 @@ void loop() {
   //------
 
   currentMillis = millis();
-  // Check and publish every 1sec. the distance measurement for zone 1 and 2
+  // Check and publish the distance measurement for zone 1 and 2
   //------
-  if ((currentMillis - measPreviousMillis) >=  10000) {
+  if ((currentMillis - measPreviousMillis) >=  RANGING_PERIOD_MS) {
     
     vl531Init(1); // Initialize sensor for zone 1 
     delay(500);
@@ -445,7 +556,7 @@ void loop() {
 
       // Add timestamp to distance measurement
       temp_str.concat(',');
-      temp_str(String(millis()));
+      temp_str.concat(String(millis()));
       
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
  
@@ -463,7 +574,7 @@ void loop() {
 
       // Add timestamp to distance measurement
       temp_str.concat(',');
-      temp_str(String(millis()));
+      temp_str.concat(String(millis()));
       
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
      
@@ -471,12 +582,20 @@ void loop() {
     }
   }
 
-  if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2
-  }
+   // if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+   // }
     
+ 
+  //------
+  //------
+
+  currentMillis = millis();
+  // Check and publish the pleople counter value
+  //------
+  if ((currentMillis - measPreviousMillis) >=  PEOPLE_COUNT_THRESHOLD_MM) {
+    if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+    }
   }
-  //------
-  //------
 
   // Keep MQTT connection active
   client.loop();

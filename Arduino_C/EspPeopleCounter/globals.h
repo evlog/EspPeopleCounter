@@ -2,7 +2,7 @@ const bool DEBUG = true; // Boolean variable used to enable debugging messages
 
 unsigned long measPreviousMillis = 0;
 
-unsigned long peopleCounter = 0;
+int peopleCounter = 0;
 
 // AP WiFi manager setup
 // -----
@@ -35,6 +35,9 @@ char mqttDebugTopic[150];
 
 const char* MQTT_PEOPLE_RESET_TOPIC = "people/reset";
 char mqttPeopleResetTopic[150];
+
+const char* MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC = "threshold";
+char mqttPeopleCountThresholdTopic[150];
 
 const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";
 char mqttSensorRebootTopic[150];
@@ -73,6 +76,16 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
 uint32_t MEASUREMENT_BUDGET_MS = 50;
+
+// Define in ms how often to send ranging data for zone 1,2 over MQTT 
+uint32_t RANGING_PERIOD_MS = 10000; 
+
+// Define in mm the people counter distance measurement threshold
+uint32_t PEOPLE_COUNT_THRESHOLD_MM = 0; 
+
+// People Counting defines
+#define NOBODY 0
+#define SOMEONE 1
 
 // Interval between measurements, set through
 // VL53L1_SetInterMeasurementPeriodMilliSeconds(). According to the API user
