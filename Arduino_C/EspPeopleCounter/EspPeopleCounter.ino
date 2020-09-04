@@ -337,7 +337,7 @@ VL53L1_RangingMeasurementData_t printRangingData() {
   return RangingData; 
 }
 
-int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
+void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
     static int PathTrack[] = {0,0,0,0};
     static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
     static int LeftPreviousStatus = NOBODY;
@@ -431,7 +431,7 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   }
 
   // output debug data to main host machine
-  return(peopleCounter);
+  //return(peopleCounter);
 
 }
 
@@ -505,7 +505,7 @@ void setup() {
   uint8_t byteData;
   uint16_t wordData;
 
-  Wire.begin();
+  Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
   // Initialize sensor for zone 1
@@ -559,6 +559,9 @@ void loop() {
       temp_str.concat(String(millis()));
       
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+
+      // Check and increase the counter for zone 0
+      ProcessPeopleCountingData(RangingData.RangeMilliMeter, 0);
  
       client.publish(mqttDistance1MeasurementTopic, temp);  
     }
@@ -577,23 +580,27 @@ void loop() {
       temp_str.concat(String(millis()));
       
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+
+      // Check and increase the counter for zone 1
+      ProcessPeopleCountingData(RangingData.RangeMilliMeter, 1);
      
       client.publish(mqttDistance2MeasurementTopic, temp); 
     }
   }
 
-   // if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
-   // }
-    
- 
   //------
   //------
 
   currentMillis = millis();
   // Check and publish the pleople counter value
   //------
-  if ((currentMillis - measPreviousMillis) >=  PEOPLE_COUNT_THRESHOLD_MM) {
+  if ((currentMillis - measPreviousMillis) >=  PEOPLE_COUNTER_PERIOD_MS) {
     if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+      temp_str = String(peopleCounter); //converting ftemp (the float variable above) to a string
+
+      // Add timestamp to distance measurement
+      temp_str.concat(',');
+      temp_str.concat(String(millis()));     
     }
   }
 

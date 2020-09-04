@@ -78,7 +78,10 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 uint32_t MEASUREMENT_BUDGET_MS = 50;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
-uint32_t RANGING_PERIOD_MS = 10000; 
+uint32_t RANGING_PERIOD_MS = 10000; // default is 10sec.
+
+// Define in ms how often to send people counter data over MQTT 
+uint32_t PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
 
 // Define in mm the people counter distance measurement threshold
 uint32_t PEOPLE_COUNT_THRESHOLD_MM = 0; 
