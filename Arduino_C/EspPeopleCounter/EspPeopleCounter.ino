@@ -170,18 +170,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttRoiConfig1Topic) {
     if (message.length() > 4) {
       String roiConfig1 = message;
-      String p0, p1, p2, p3;
-      StringSplitter *splitter = new StringSplitter(roiConfig1, ',', 4);
+      String p0_1, p1_1, p2_1, p3_1;
+      StringSplitter *splitter1 = new StringSplitter(roiConfig1, ',', 4);
 
       //Read config1 ROI parameters
-      p0 = splitter->getItemAtIndex(0);
-      p1 = splitter->getItemAtIndex(1);
-      p2 = splitter->getItemAtIndex(2);
-      p3 = splitter->getItemAtIndex(3); 
-      config1TopLeftX = p0.toInt();
-      config1TopLeftY = p1.toInt();
-      config1BottomRightX = p2.toInt();
-      config1BottomRightY = p3.toInt(); 
+      p0_1 = splitter1->getItemAtIndex(0);
+      p1_1 = splitter1->getItemAtIndex(1);
+      p2_1 = splitter1->getItemAtIndex(2);
+      p3_1 = splitter1->getItemAtIndex(3); 
+      config1TopLeftX = p0_1.toInt();
+      config1TopLeftY = p1_1.toInt();
+      config1BottomRightX = p2_1.toInt();
+      config1BottomRightY = p3_1.toInt(); 
       Serial.println(config1TopLeftX);  
       Serial.println(config1TopLeftY);
       Serial.println(config1BottomRightX);
@@ -193,18 +193,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttRoiConfig2Topic) {
     if (message.length() > 4) {
       String roiConfig2 = message;
-      String p0, p1, p2, p3;
-      StringSplitter *splitter = new StringSplitter(roiConfig2, ',', 4);
+      String p0_2, p1_2, p2_2, p3_2;
+      StringSplitter *splitter2 = new StringSplitter(roiConfig2, ',', 4);
 
       //Read config1 ROI parameters
-      p0 = splitter->getItemAtIndex(0);
-      p1 = splitter->getItemAtIndex(1);
-      p2 = splitter->getItemAtIndex(2);
-      p3 = splitter->getItemAtIndex(3); 
-      config2TopLeftX = p0.toInt();
-      config2TopLeftY = p1.toInt();
-      config2BottomRightX = p2.toInt();
-      config2BottomRightY = p3.toInt(); 
+      p0_2 = splitter2->getItemAtIndex(0);
+      p1_2 = splitter2->getItemAtIndex(1);
+      p2_2 = splitter2->getItemAtIndex(2);
+      p3_2 = splitter2->getItemAtIndex(3); 
+      config2TopLeftX = p0_2.toInt();
+      config2TopLeftY = p1_2.toInt();
+      config2BottomRightX = p2_2.toInt();
+      config2BottomRightY = p3_2.toInt(); 
       Serial.println(config2TopLeftX);  
       Serial.println(config2TopLeftY);
       Serial.println(config2BottomRightX);
