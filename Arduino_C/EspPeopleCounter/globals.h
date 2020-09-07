@@ -1,6 +1,8 @@
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 
-unsigned long measPreviousMillis = 0;
+unsigned long measPreviousMillisRanging = 0;
+unsigned long measPreviousMillisPeople = 0;
+
 
 int peopleCounter = 0;
 

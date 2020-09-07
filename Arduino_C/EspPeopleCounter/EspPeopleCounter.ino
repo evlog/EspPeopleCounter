@@ -543,8 +543,8 @@ void loop() {
   currentMillis = millis();
   // Check and publish the distance measurement for zone 1 and 2
   //------
-  if ((currentMillis - measPreviousMillis) >=  RANGING_PERIOD_MS) {
-    
+  if ((currentMillis - measPreviousMillisRanging) >=  RANGING_PERIOD_MS) {
+
     vl531Init(1); // Initialize sensor for zone 1 
     delay(500);
     RangingData = checkGetRangingData();  
@@ -586,6 +586,8 @@ void loop() {
      
       client.publish(mqttDistance2MeasurementTopic, temp); 
     }
+
+    measPreviousMillisRanging =  millis();
   }
 
   //------
@@ -594,7 +596,7 @@ void loop() {
   currentMillis = millis();
   // Check and publish the pleople counter value
   //------
-  if ((currentMillis - measPreviousMillis) >=  PEOPLE_COUNTER_PERIOD_MS) {
+  if ((currentMillis - measPreviousMillisPeople) >=  PEOPLE_COUNTER_PERIOD_MS) {
     if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
       temp_str = String(peopleCounter); //converting ftemp (the float variable above) to a string
 
@@ -602,6 +604,8 @@ void loop() {
       temp_str.concat(',');
       temp_str.concat(String(millis()));     
     }
+
+    measPreviousMillisPeople = millis();
   }
 
   // Keep MQTT connection active
