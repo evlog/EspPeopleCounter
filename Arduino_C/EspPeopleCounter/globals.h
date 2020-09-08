@@ -30,7 +30,7 @@ const char* MQTT_USERNAME = "pi";
 const char* MQTT_PASSWORD = "rjaxtarmas1";
 
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "evlog.zapto.org";
+const char* MQTT_ADDRESS = "192.168.1.40";//"evlog.zapto.org";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
@@ -40,6 +40,9 @@ char mqttPeopleResetTopic[150];
 
 const char* MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC = "threshold";
 char mqttPeopleCountThresholdTopic[150];
+
+const char* MQTT_PEOPLE_COUNT_TOPIC = "people/count";
+char mqttPeopleCountTopic[150];
 
 const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";
 char mqttSensorRebootTopic[150];
@@ -61,6 +64,12 @@ char mqttDistance1MeasurementTopic[150];
 
 const char* MQTT_DISTANCE2_MEASUREMENT_TOPIC = "distance2Measurement";
 char mqttDistance2MeasurementTopic[150];
+
+const char* MQTT_DISTANCE_MODE_TOPIC = "distanceMode";
+char mqttDistanceModeTopic[150];
+
+const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";
+char mqttRangingPeriodTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
@@ -87,6 +96,9 @@ uint32_t PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min.
 
 // Define in mm the people counter distance measurement threshold
 uint32_t PEOPLE_COUNT_THRESHOLD_MM = 0; 
+
+// Define distance metering mode of the sensor (short or long, default is long)
+String VL53L1_DISTANCE_MODE = "long";
 
 // People Counting defines
 #define NOBODY 0

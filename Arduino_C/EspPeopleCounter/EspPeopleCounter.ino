@@ -58,7 +58,12 @@ void vl531Init(uint8_t zone) {
   status = VL53L1_WaitDeviceBooted(Dev);
   status = VL53L1_DataInit(Dev);
   status = VL53L1_StaticInit(Dev);
-  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+
+  if (VL53L1_DISTANCE_MODE == "long")
+    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+  else if (VL53L1_DISTANCE_MODE == "short")
+    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_SHORT);
+    
   status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
   status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);
   status = VL53L1_SetUserROI(Dev, &roiConfig);
@@ -160,7 +165,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
       // Initialize sensor with new congig. value 
       vl531Init(1);    
-      client.publish(mqttMeasurementBudgetTopic, "OK");
+      client.publish(mqttMeasurementPeriodTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementPeriodTopic -> ");
         Serial.println(INTER_MEASUREMENT_PERIOD_MS);
@@ -213,6 +218,35 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       client.publish(mqttRoiConfig2Topic, "OK");  
     }
   }
+  else if (topic_str == mqttDistanceModeTopic) {
+    if (message.length() > 3) {
+      if (message == "short") {
+        VL53L1_DISTANCE_MODE = "short";
+        client.publish(mqttDistanceModeTopic, "OK");
+      }
+      else if (message == "long") {     
+        VL53L1_DISTANCE_MODE = "long";
+        client.publish(mqttDistanceModeTopic, "OK");
+      }      
+      // Initialize sensor with new congig. value 
+      vl531Init(1);    
+      
+      if (DEBUG) { 
+        Serial.print("mqttDistanceModeTopic -> ");
+        Serial.println(VL53L1_DISTANCE_MODE);
+      }
+    }
+  }
+  else if (topic_str == mqttRangingPeriodTopic) {
+    if (isValidNumber(message)) {
+      RANGING_PERIOD_MS = message.toInt();   
+      client.publish(mqttRangingPeriodTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttRangingPeriodTopic -> ");
+        Serial.println(RANGING_PERIOD_MS);
+      }
+    }
+  }  
   /*else if (topic_str == mqttDistance1MeasurementTopic) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
@@ -241,6 +275,8 @@ void topicSubscribe() {
     client.subscribe(mqttPeopleResetTopic);      
     Serial.println(mqttPeopleCountThresholdTopic);
     client.subscribe(mqttPeopleCountThresholdTopic); 
+    Serial.println(mqttPeopleCountTopic);
+    client.subscribe(mqttPeopleCountTopic); 
     Serial.println(mqttSensorRebootTopic);    
     client.subscribe(mqttSensorRebootTopic);
     Serial.println(mqttMeasurementBudgetTopic);
@@ -255,6 +291,10 @@ void topicSubscribe() {
     client.subscribe(mqttDistance1MeasurementTopic);  
     Serial.println(mqttDistance2MeasurementTopic); 
     client.subscribe(mqttDistance2MeasurementTopic); 
+    Serial.println(mqttDistanceModeTopic); 
+    client.subscribe(mqttDistanceModeTopic); 
+    Serial.println(mqttRangingPeriodTopic); 
+    client.subscribe(mqttRangingPeriodTopic); 
     client.loop();
   }  
 }
@@ -485,6 +525,7 @@ void setup() {
   sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
   sprintf(mqttPeopleResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_RESET_TOPIC);   
   sprintf(mqttPeopleCountThresholdTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC);
+  sprintf(mqttPeopleCountTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_TOPIC);
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
@@ -492,6 +533,8 @@ void setup() {
   sprintf(mqttRoiConfig2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG2_TOPIC);
   sprintf(mqttDistance1MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE1_MEASUREMENT_TOPIC);
   sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
+  sprintf(mqttDistanceModeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MODE_TOPIC);
+  sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
@@ -603,6 +646,10 @@ void loop() {
       // Add timestamp to distance measurement
       temp_str.concat(',');
       temp_str.concat(String(millis()));     
+
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa..
+
+      client.publish(mqttPeopleCountTopic, temp);
     }
 
     measPreviousMillisPeople = millis();
