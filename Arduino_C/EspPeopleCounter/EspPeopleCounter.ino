@@ -1,6 +1,8 @@
 // Define libraries
 // -----
-#include <IotWebConf.h> // Library to handle WiFi AP configuration portal
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
 #include <StringSplitter.h>
@@ -76,22 +78,6 @@ void vl531Init(uint8_t zone) {
   }
 }
 
-// Function to handle AP WiFi manager configuration page
-void handleRoot()
-{
-  // -- Let IotWebConf test and handle captive portal requests.
-  if (iotWebConf.handleCaptivePortal())
-  {
-    // -- Captive portal request were already served.
-    return;
-  }
-  String s = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/>";
-  s += "<title>IotWebConf 01 Minimal</title></head><body>Hello world!";
-  s += "Go to <a href='config'>configure page</a> to change settings.";
-  s += "</body></html>\n";
-
-  server.send(200, "text/html", s);
-}
 
 // This function is called when an MQTT message is received
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
@@ -145,7 +131,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       client.publish(mqttSensorRebootTopic, "OK");
       if (DEBUG) Serial.println("mqttSensorRebootTopic -> true");
       delay(1000);
-      ESP.reset();
+      ESP.restart();
     }
   }
   else if (topic_str == mqttMeasurementBudgetTopic) {
@@ -303,7 +289,10 @@ void topicSubscribe() {
 // Reconnect to MQTT broker if connection is lost
 void mqttReconnect() {
   // Loop until we're reconnected
+  uint8_t counter = 0;
+  
   while (!client.connected()) {
+    counter++;
     if (DEBUG) Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD)) {
@@ -317,6 +306,9 @@ void mqttReconnect() {
       if (DEBUG) Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
+    }
+    if (counter == 5) { // reboot and reconnectr to wifi if MQTT connection is not possible
+      ESP.restart();
     }
   }
 }
@@ -484,28 +476,19 @@ void setup() {
 
   // AP WiFi manager setup
   //---
-  boolean validConfig = iotWebConf.init();
-
-  Serial.print("validConfig:");
-  Serial.println(validConfig);
-
-  // -- Set up required URL handlers on the web server.
-  server.on("/", handleRoot);
-  server.on("/config", []{ iotWebConf.handleConfig(); });
-  server.onNotFound([](){ iotWebConf.handleNotFound(); }); 
+  wifiManager.autoConnect("WifiManager"); // Initial name of the Thing. Used e.g. as SSID of the own Access Point.
   //---
   //---
 
   // Check status of WiFi connection and enable the AP WiFi manager page if needed
   // -----
-  while(1) {
-    iotWebConf.doLoop();
-    
+  while(1) {    
     // Try to connect to wifi
     //connect_to_wifi_manager();
     //if (!iotWebConf.checkWifiConnection()) {
     if (WiFi.status() != WL_CONNECTED) {
      Serial.print("Reconnecting to WiFi...\n");
+     delay(1000);
     }
     else {
       Serial.println("WiFi connected\n");
@@ -570,7 +553,7 @@ void loop() {
     delay(20000);
 
     if (WiFi.status() != WL_CONNECTED)
-      ESP.reset();
+      ESP.restart();
   }
   //------
   //------
