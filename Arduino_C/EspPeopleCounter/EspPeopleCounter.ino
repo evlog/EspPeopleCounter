@@ -1,12 +1,13 @@
 // Define libraries
 // -----
-#include <DNSServer.h>
+//#include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
 #include <StringSplitter.h>
-#include "src/vl53l1x-st-api/vl53l1_api.h"
+//#include "src/vl53l1x-st-api/vl53l1_api.h"
+#include <SparkFun_VL53L1X.h>
 #include "globals.h"
 // -----
 // -----
@@ -20,62 +21,21 @@ boolean isValidNumber(String str){
 } 
 
 // vl53l1 configruation and variables
-void vl531Init(uint8_t zone) {
+uint16_t vl531Init() {  
   
-  uint8_t byteData;
-  uint16_t wordData;
+  uint16_t distance;
+  
+  SFEVL53L1X distanceSensor(Wire);
 
+  distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+  delay(50);
+  distanceSensor.setTimingBudgetInMs(50);
+  distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
+  distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
+  distanceSensor.stopRanging();
 
-  // This is the default 8-bit slave address (including R/W as the least
-  // significant bit) as expected by the API. Note that the Arduino Wire library
-  // uses a 7-bit address without the R/W bit instead (0x29 or 0b0101001).
-  Dev->I2cDevAddr = 0x52;
-
-  VL53L1_software_reset(Dev);
-
-  if (zone == 1) {
-    roiConfig.TopLeftX = config1TopLeftX;
-    roiConfig.TopLeftY = config2TopLeftY;
-    roiConfig.BotRightX = config2BottomRightX;
-    roiConfig.BotRightY = config2BottomRightY;
-  }
-  else if (zone == 2) {
-    roiConfig.TopLeftX = config2TopLeftX;
-    roiConfig.TopLeftY = config2TopLeftY;
-    roiConfig.BotRightX = config2BottomRightX;
-    roiConfig.BotRightY = config2BottomRightY;
-  }
-
-  VL53L1_RdByte(Dev, 0x010F, &byteData);
-  Serial.print(F("VL53L1X Model_ID: "));
-  Serial.println(byteData, HEX);
-  VL53L1_RdByte(Dev, 0x0110, &byteData);
-  Serial.print(F("VL53L1X Module_Type: "));
-  Serial.println(byteData, HEX);
-  VL53L1_RdWord(Dev, 0x010F, &wordData);
-  Serial.print(F("VL53L1X: "));
-  Serial.println(wordData, HEX);
-
-  Serial.println(F("Autonomous Ranging Test"));
-  status = VL53L1_WaitDeviceBooted(Dev);
-  status = VL53L1_DataInit(Dev);
-  status = VL53L1_StaticInit(Dev);
-
-  if (VL53L1_DISTANCE_MODE == "long")
-    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
-  else if (VL53L1_DISTANCE_MODE == "short")
-    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_SHORT);
-    
-  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, MEASUREMENT_BUDGET_MS * 1000);
-  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, INTER_MEASUREMENT_PERIOD_MS);
-  status = VL53L1_SetUserROI(Dev, &roiConfig);
-  status = VL53L1_StartMeasurement(Dev);
-
-  if(status)
-  {
-    Serial.println(F("VL53L1_StartMeasurement failed"));
-    //while(1);
-  }
+  return distance;
+  
 }
 
 
@@ -118,7 +78,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (isValidNumber(message)) {
       PEOPLE_COUNT_THRESHOLD_MM = message.toInt();
       // Initialize sensor with new congig. value 
-      vl531Init(1); 
+      //vl531Init(1); 
       client.publish(mqttPeopleCountThresholdTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttPeopleCountThresholdTopic -> ");
@@ -138,7 +98,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (isValidNumber(message)) {
       MEASUREMENT_BUDGET_MS = message.toInt();
       // Initialize sensor with new congig. value 
-      vl531Init(1); 
+      //vl531Init(1); 
       client.publish(mqttMeasurementBudgetTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementBudgetTopic -> ");
@@ -150,7 +110,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
       // Initialize sensor with new congig. value 
-      vl531Init(1);    
+      //vl531Init(1);    
       client.publish(mqttMeasurementPeriodTopic, "OK");
       if (DEBUG) { 
         Serial.print("mqttMeasurementPeriodTopic -> ");
@@ -177,7 +137,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(config1TopLeftY);
       Serial.println(config1BottomRightX);
       Serial.println(config1BottomRightY);
-      vl531Init(1); // Initialize sensor for zone 1
+      //vl531Init(1); // Initialize sensor for zone 1
       client.publish(mqttRoiConfig1Topic, "OK");  
     }
   }
@@ -200,7 +160,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(config2TopLeftY);
       Serial.println(config2BottomRightX);
       Serial.println(config2BottomRightY);
-      vl531Init(2); // Initialize sensor for zone 2
+      //vl531Init(2); // Initialize sensor for zone 2
       client.publish(mqttRoiConfig2Topic, "OK");  
     }
   }
@@ -215,7 +175,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         client.publish(mqttDistanceModeTopic, "OK");
       }      
       // Initialize sensor with new congig. value 
-      vl531Init(1);    
+      //vl531Init(1);    
       
       if (DEBUG) { 
         Serial.print("mqttDistanceModeTopic -> ");
@@ -313,80 +273,19 @@ void mqttReconnect() {
   }
 }
 
-// Check sensor status and get measurements
-VL53L1_RangingMeasurementData_t checkGetRangingData() {
-  static uint16_t startMs = millis();
-  uint8_t isReady;
-  static VL53L1_RangingMeasurementData_t rangingData;
-  
-  // non-blocking for sensor data
-  status = VL53L1_GetMeasurementDataReady(Dev, &isReady);
-
-  if(!status)
-  {
-    if(isReady)
-    {
-      rangingData = printRangingData();
-      VL53L1_ClearInterruptAndStartMeasurement(Dev);
-      startMs = millis();
-    }
-    else if((uint16_t)(millis() - startMs) > VL53L1_RANGE_COMPLETION_POLLING_TIMEOUT_MS)
-    {
-      Serial.print(F("Timeout waiting for data ready."));
-      VL53L1_ClearInterruptAndStartMeasurement(Dev);
-      startMs = millis();
-    }
-  }
-  else
-  {
-    Serial.print(F("Error getting data ready: "));
-    Serial.println(status);
-  }
-
-  // Optional polling delay; should be smaller than INTER_MEASUREMENT_PERIOD_MS,
-  // and MUST be smaller than VL53L1_RANGE_COMPLETION_POLLING_TIMEOUT_MS
-  delay(10);
-
-  return rangingData;
-}
-
-// Get ranging data from sensor
-VL53L1_RangingMeasurementData_t printRangingData() {
-  static VL53L1_RangingMeasurementData_t RangingData;
-
-  status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
-  if(!status)
-  {
-    Serial.print(RangingData.RangeStatus);
-    Serial.print(F(","));
-    Serial.print(RangingData.RangeMilliMeter);
-    Serial.print(F(","));
-    Serial.print(RangingData.SignalRateRtnMegaCps/65536.0);
-    Serial.print(F(","));
-    Serial.println(RangingData.AmbientRateRtnMegaCps/65336.0); 
-  }
-
-  return RangingData; 
-}
-
 void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
-    static int PathTrack[] = {0,0,0,0};
-    static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
-    static int LeftPreviousStatus = NOBODY;
-    static int RightPreviousStatus = NOBODY;
-    //static int PeopleCount = 0;
 
     int CurrentZoneStatus = NOBODY;
     int AllZonesCurrentStatus = 0;
     int AnEventHasOccured = 0;
 
-  if (Distance < PEOPLE_COUNT_THRESHOLD_MM) {
+  if (Distance < DIST_THRESHOLD_MAX[Zone]) {
     // Someone is in !
     CurrentZoneStatus = SOMEONE;
   }
 
   // left zone
-  if (zone == 0) {
+  if (zone == LEFT) {
 
     if (CurrentZoneStatus != LeftPreviousStatus) {
       // event in left zone has occured
@@ -436,17 +335,22 @@ void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
       // check exit or entry only if PathTrackFillingSize is 4 (for example 0 1 3 2) and last event is 0 (nobobdy anywhere)
       if (PathTrackFillingSize == 4) {
         // check exit or entry. no need to check PathTrack[0] == 0 , it is always the case
-
+        Serial.println();
         if ((PathTrack[1] == 1)  && (PathTrack[2] == 3) && (PathTrack[3] == 2)) {
           // This an entry
           peopleCounter ++;
-
+          Serial.print("One person has entered in the room. People in the room now: ");
+          Serial.print(peopleCounter);
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
           // This an exit
           peopleCounter --;
-        }
+          Serial.print("One person has exited the room. People in the room now: ");
+          Serial.print(peopleCounter);  
+          }
       }
-
+      for (int i=0; i<4; i++){
+        PathTrack[i] = 0;
+      }
       PathTrackFillingSize = 1;
     }
     else {
@@ -463,9 +367,11 @@ void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   }
 
   // output debug data to main host machine
-  //return(peopleCounter);
-
+  //return(peopleCounter);     
 }
+
+
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -512,7 +418,7 @@ void setup() {
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
-  sprintf(mqttRoiConfig1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG1_TOPIC);
+  sprintf(mqttRoiConfig1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG1_TOPIC); 
   sprintf(mqttRoiConfig2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG2_TOPIC);
   sprintf(mqttDistance1MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE1_MEASUREMENT_TOPIC);
   sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
@@ -526,26 +432,22 @@ void setup() {
   //------
   //------
 
-  // vl53l1 configruation and variables
-  // -----
-  uint8_t byteData;
-  uint16_t wordData;
+
 
   Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
-  // Initialize sensor for zone 1
-  vl531Init(1);
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   bool distance1Flag = false;
   bool distance2Flag = false;
-  static VL53L1_RangingMeasurementData_t RangingData;
   char temp[50];
   String temp_str;
   unsigned long currentMillis = 0;
+  uint16_t RangingData;
 
   // If reset connection is lost reset after 20sec.
   //------
@@ -570,15 +472,14 @@ void loop() {
   // Check and publish the distance measurement for zone 1 and 2
   //------
   if ((currentMillis - measPreviousMillisRanging) >=  RANGING_PERIOD_MS) {
-
-    vl531Init(1); // Initialize sensor for zone 1 
+ 
     delay(500);
-    RangingData = checkGetRangingData();  
+    RangingData = vl531Init(); 
 
-    if (RangingData.RangeMilliMeter != 0) { // Check if we got meaningful distance data
+    if (RangingData != 0) { // Check if we got meaningful distance data
       distance1Flag = true;
       
-      temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
+      temp_str = String(RangingData); //converting ftemp (the float variable above) to a string
 
       // Add timestamp to distance measurement
       temp_str.concat(',');
@@ -587,31 +488,12 @@ void loop() {
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
       // Check and increase the counter for zone 0
-      ProcessPeopleCountingData(RangingData.RangeMilliMeter, 0);
+      ProcessPeopleCountingData(RangingData, 0);
  
       client.publish(mqttDistance1MeasurementTopic, temp);  
     }
-
-    vl531Init(2); // Initialize sensor for zone 2
-    delay(500);
-    RangingData = checkGetRangingData();
-
-    if (RangingData.RangeMilliMeter != 0) { // Check if we got meaningful distance data
-      distance2Flag = true;
-      
-      temp_str = String(RangingData.RangeMilliMeter); //converting ftemp (the float variable above) to a string
-
-      // Add timestamp to distance measurement
-      temp_str.concat(',');
-      temp_str.concat(String(millis()));
-      
-      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
-
-      // Check and increase the counter for zone 1
-      ProcessPeopleCountingData(RangingData.RangeMilliMeter, 1);
-     
-      client.publish(mqttDistance2MeasurementTopic, temp); 
-    }
+    Serial.print("Distance: ");
+    Serial.println(RangingData);
 
     measPreviousMillisRanging =  millis();
   }
@@ -623,7 +505,10 @@ void loop() {
   // Check and publish the pleople counter value
   //------
   if ((currentMillis - measPreviousMillisPeople) >=  PEOPLE_COUNTER_PERIOD_MS) {
-    if (distance1Flag && distance2Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+    if (distance1Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+
+      
+      
       temp_str = String(peopleCounter); //converting ftemp (the float variable above) to a string
 
       // Add timestamp to distance measurement

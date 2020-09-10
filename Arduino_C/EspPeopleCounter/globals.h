@@ -21,7 +21,7 @@ const char* MQTT_USERNAME = "pi";
 const char* MQTT_PASSWORD = "rjaxtarmas1";
 
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "192.168.1.40";//"evlog.zapto.org";
+const char* MQTT_ADDRESS = "evlog.zapto.org";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
@@ -72,34 +72,19 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
 // vl53l1 configruation and variables
 // -----
-// By default, this example blocks while waiting for sensor data to be ready.
-// Comment out this line to poll for data ready in a non-blocking way instead.
-//#define USE_BLOCKING_LOOP
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-uint32_t MEASUREMENT_BUDGET_MS = 50;
+uint32_t  MEASUREMENT_BUDGET_MS = 50;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
-uint32_t RANGING_PERIOD_MS = 10000; // default is 10sec.
+uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
 
 // Define in ms how often to send people counter data over MQTT 
-uint32_t PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
+uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
 
 // Define in mm the people counter distance measurement threshold
-uint32_t PEOPLE_COUNT_THRESHOLD_MM = 0; 
+uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
 
-// Define distance metering mode of the sensor (short or long, default is long)
-String VL53L1_DISTANCE_MODE = "long";
-
-// People Counting defines
-#define NOBODY 0
-#define SOMEONE 1
-
-// Interval between measurements, set through
-// VL53L1_SetInterMeasurementPeriodMilliSeconds(). According to the API user
-// manual (rev 2), "the minimum inter-measurement period must be longer than the
-// timing budget + 4 ms." The STM32Cube example from ST uses 500 ms, but we
-// reduce this to 55 ms to allow faster readings.
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
 
 // Define ROI config1
@@ -114,11 +99,35 @@ uint32_t config2TopLeftY = 0;
 uint32_t config2BottomRightX = 0; 
 uint32_t config2BottomRightY = 0;
 
-VL53L1_Dev_t                   dev;
-VL53L1_DEV                     Dev = &dev;
+// Define distance metering mode of the sensor (short or long, default is long)
+String  VL53L1_DISTANCE_MODE = "long";
+//#######
+char peopleCounterArray[50];
 
-VL53L1_UserRoi_t roiConfig;
 
-int status;
+//Optional interrupt and shutdown pins.  Vanno cambiati e messi quelli che hanno i collegamenti i^2C
+#define  SHUTDOWN_PIN 2    
+#define  INTERRUPT_PIN 3
+
+
+static int NOBODY = 0;
+static int SOMEONE = 1;
+static int LEFT = 0;
+static int RIGHT = 1;
+
+static int DIST_THRESHOLD_MAX[] = {1850, 1650};   // treshold of the two zones
+
+static int PathTrack[] = {0,0,0,0};
+static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
+static int LeftPreviousStatus = NOBODY;
+static int RightPreviousStatus = NOBODY;
+static int PeopleCount = 0;
+
+static int center[2] = {239,175}; /* center of the two zones */  
+static int Zone = 0;
+static int PplCounter = 0;
+
+static int ROI_height = 5;
+static int ROI_width = 5;
 // -----
 // -----
