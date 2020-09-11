@@ -501,7 +501,6 @@ void loop() {
 
   // inject the new ranged distance in the people counting algorithm
   //------
-  delay(200);
   RangingData = vl531Init();
   
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
@@ -509,11 +508,17 @@ void loop() {
   zone++;
   zone = zone%2;
 
-  Serial.print("Distance: ");
-  Serial.println(RangingData);
+  // Report distance and people counter on Serial port every 200ms
+  currentMillis = millis();
+  if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
+    Serial.print("Distance: ");
+    Serial.println(RangingData);
 
-  Serial.print("People counter: ");
-  Serial.println(peopleCounterVar);
+    Serial.print("People counter: ");
+    Serial.println(peopleCounterVar);
+
+    measPreviousMillisDataSerialReport = millis();
+  }
   //------
   //------
 
