@@ -273,11 +273,12 @@ void mqttReconnect() {
   }
 }
 
-void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
+uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
 
     int CurrentZoneStatus = NOBODY;
     int AllZonesCurrentStatus = 0;
     int AnEventHasOccured = 0;
+    uint16_t peopleCounterLocal = 0;
 
   if (Distance < DIST_THRESHOLD_MAX[Zone]) {
     // Someone is in !
@@ -367,7 +368,7 @@ void ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   }
 
   // output debug data to main host machine
-  //return(peopleCounter);     
+  return(peopleCounter);     
 }
 
 
@@ -449,6 +450,7 @@ void loop() {
   unsigned long currentMillis = 0;
   uint16_t RangingData;
 
+
   // If reset connection is lost reset after 20sec.
   //------
   if (WiFi.status() != WL_CONNECTED) {
@@ -469,30 +471,26 @@ void loop() {
   //------
 
   currentMillis = millis();
-  // Check and publish the distance measurement for zone 1 and 2
+  // Check and publish the distance measurement 
   //------
   if ((currentMillis - measPreviousMillisRanging) >=  RANGING_PERIOD_MS) {
  
-    delay(500);
     RangingData = vl531Init(); 
 
-    if (RangingData != 0) { // Check if we got meaningful distance data
-      distance1Flag = true;
+   // if (RangingData != 0) { // Check if we got meaningful distance data
+    distance1Flag = true;
       
-      temp_str = String(RangingData); //converting ftemp (the float variable above) to a string
+    temp_str = String(RangingData); //converting ftemp (the float variable above) to a string
 
-      // Add timestamp to distance measurement
-      temp_str.concat(',');
-      temp_str.concat(String(millis()));
+    // Add timestamp to distance measurement
+    temp_str.concat(',');
+    temp_str.concat(String(millis()));
       
-      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
-      // Check and increase the counter for zone 0
-      ProcessPeopleCountingData(RangingData, 0);
- 
-      client.publish(mqttDistance1MeasurementTopic, temp);  
-    }
-    Serial.print("Distance: ");
+    client.publish(mqttDistance1MeasurementTopic, temp);  
+  //  }
+    Serial.print("MQTT report, distance: ");
     Serial.println(RangingData);
 
     measPreviousMillisRanging =  millis();
@@ -501,24 +499,45 @@ void loop() {
   //------
   //------
 
+  // inject the new ranged distance in the people counting algorithm
+  //------
+  delay(200);
+  RangingData = vl531Init();
+  
+  peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
+
+  zone++;
+  zone = zone%2;
+
+  Serial.print("Distance: ");
+  Serial.println(RangingData);
+
+  Serial.print("People counter: ");
+  Serial.println(peopleCounterVar);
+  //------
+  //------
+
   currentMillis = millis();
   // Check and publish the pleople counter value
   //------
   if ((currentMillis - measPreviousMillisPeople) >=  PEOPLE_COUNTER_PERIOD_MS) {
-    if (distance1Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
+  //  if (distance1Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
 
       
       
-      temp_str = String(peopleCounter); //converting ftemp (the float variable above) to a string
+    temp_str = String(peopleCounterVar); //converting ftemp (the float variable above) to a string
 
-      // Add timestamp to distance measurement
-      temp_str.concat(',');
-      temp_str.concat(String(millis()));     
+    // Add timestamp to distance measurement
+    temp_str.concat(',');
+    temp_str.concat(String(millis()));     
 
-      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa..
+    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa..
 
-      client.publish(mqttPeopleCountTopic, temp);
-    }
+    client.publish(mqttPeopleCountTopic, temp);
+
+    Serial.print("MQTT report, people counter: ");
+    Serial.println(peopleCounterVar);
+ //   }
 
     measPreviousMillisPeople = millis();
   }

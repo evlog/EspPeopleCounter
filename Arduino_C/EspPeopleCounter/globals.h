@@ -3,8 +3,10 @@ const bool DEBUG = true; // Boolean variable used to enable debugging messages
 unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisPeople = 0;
 
+uint16_t peopleCounter = 0;
+uint16_t peopleCounterVar = 0;
+int zone = 0;
 
-int peopleCounter = 0;
 
 // AP WiFi manager setup
 // -----
