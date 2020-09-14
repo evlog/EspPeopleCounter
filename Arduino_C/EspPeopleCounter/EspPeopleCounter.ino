@@ -12,6 +12,11 @@
 // -----
 // -----
 
+
+
+
+SFEVL53L1X distanceSensor(Wire);
+
 boolean isValidNumber(String str){
    for(byte i=0;i<str.length();i++)
    {
@@ -25,7 +30,6 @@ uint16_t vl531Init() {
   
   uint16_t distance;
   
-  SFEVL53L1X distanceSensor(Wire);
 
   distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
   delay(50);
@@ -376,10 +380,13 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
 
 void setup() {
   // put your setup code here, to run once:
-   Serial.begin (115200);  
-   Serial.println("Serial comm established");
-   Serial.print("Sensor MAC address: ");
-   Serial.println(MAC_ADDRESS);
+  Serial.begin (115200);  
+  Serial.println("Serial comm established");
+  Serial.print("Sensor MAC address: ");
+  Serial.println(MAC_ADDRESS);
+
+  Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
+  Wire.setClock(400000);
 
   // AP WiFi manager setup
   //---
@@ -435,8 +442,6 @@ void setup() {
 
 
 
-  Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
-  Wire.setClock(400000);
 
 
 }
