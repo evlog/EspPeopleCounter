@@ -9,7 +9,7 @@
 //#include "src/vl53l1x-st-api/vl53l1_api.h"
 #include <SparkFun_VL53L1X.h>
 #include "globals.h"
-// -----
+// ----- 
 // -----
 
 
@@ -29,7 +29,14 @@ boolean isValidNumber(String str){
 uint16_t vl531Init() {  
   
   uint16_t distance;
-  
+
+  if (distanceSensor.init()) {
+    Serial.println("Sensor initialization success");
+    Serial.print("Sensor ID: ");
+    Serial.println(distanceSensor.getSensorID());
+  }
+  else
+    Serial.println("Sensor initialization failed");
 
   distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
   delay(50);

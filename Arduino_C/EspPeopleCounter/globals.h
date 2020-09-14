@@ -21,7 +21,7 @@ WiFiManager wifiManager;
 String MAC_ADDRESS = WiFi.macAddress(); 
 
 const char* MQTT_USERNAME = "pi";
-const char* MQTT_PASSWORD = "rjaxtarmas1";
+const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
 const char* MQTT_ADDRESS = "evlog.zapto.org";
