@@ -47,11 +47,8 @@ char mqttMeasurementBudgetTopic[150];
 const char* MQTT_MEASUREMENT_PERIOD_TOPIC = "measurementPeriod";
 char mqttMeasurementPeriodTopic[150];
 
-const char* MQTT_ROI_CONFIG1_TOPIC = "roiConfig1";
-char mqttRoiConfig1Topic[150];
-
-const char* MQTT_ROI_CONFIG2_TOPIC = "roiConfig2";
-char mqttRoiConfig2Topic[150];
+const char* MQTT_ROI_CONFIG_TOPIC = "roiConfig";
+char mqttRoiConfigTopic[150];
 
 const char* MQTT_DISTANCE1_MEASUREMENT_TOPIC = "distance1Measurement";
 char mqttDistance1MeasurementTopic[150];
@@ -108,7 +105,7 @@ String  VL53L1_DISTANCE_MODE = "long";
 char peopleCounterArray[50];
 
 
-//Optional interrupt and shutdown pins.  Vanno cambiati e messi quelli che hanno i collegamenti i^2C
+//Optional interrupt and shutdown pins
 #define  SHUTDOWN_PIN 2    
 #define  INTERRUPT_PIN 3
 

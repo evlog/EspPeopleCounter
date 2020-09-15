@@ -39,8 +39,16 @@ uint16_t vl531Init() {
     Serial.println("Sensor initialization failed");
 
   distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+
+
+  if (VL53L1_DISTANCE_MODE == "short")
+    distanceSensor.setDistanceModeShort();
+  else if (VL53L1_DISTANCE_MODE == "long")
+    distanceSensor.setDistanceModeLong();
+    
   delay(50);
-  distanceSensor.setTimingBudgetInMs(50);
+  distanceSensor.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
+  distanceSensor.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
   distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
   distanceSensor.stopRanging();
@@ -86,15 +94,22 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   }
   else if (topic_str == mqttPeopleCountThresholdTopic) {
-    if (isValidNumber(message)) {
-      PEOPLE_COUNT_THRESHOLD_MM = message.toInt();
-      // Initialize sensor with new congig. value 
-      //vl531Init(1); 
+    if (message.length() > 2) {
+      String countThreshold = message;
+      String t0, t1;
+      StringSplitter *splitterTh = new StringSplitter(countThreshold, ',', 2);
+
+      //Read threshold
+      t0 = splitterTh->getItemAtIndex(0);
+      t1 = splitterTh->getItemAtIndex(1);
+      
+      DIST_THRESHOLD_MAX[0] = t0.toInt();
+      DIST_THRESHOLD_MAX[1] = t1.toInt();
+
+      Serial.println(DIST_THRESHOLD_MAX[0]);
+      Serial.println(DIST_THRESHOLD_MAX[1]);
+
       client.publish(mqttPeopleCountThresholdTopic, "OK");
-      if (DEBUG) { 
-        Serial.print("mqttPeopleCountThresholdTopic -> ");
-        Serial.println(PEOPLE_COUNT_THRESHOLD_MM);
-      }
     }
   }
   else if (topic_str == mqttSensorRebootTopic) {
@@ -129,50 +144,31 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
-  else if (topic_str == mqttRoiConfig1Topic) {
+  else if (topic_str == mqttRoiConfigTopic) {
     if (message.length() > 4) {
-      String roiConfig1 = message;
-      String p0_1, p1_1, p2_1, p3_1;
-      StringSplitter *splitter1 = new StringSplitter(roiConfig1, ',', 4);
+      String roiConfig = message;
+      String p0, p1, p2, p3;
+      StringSplitter *splitterRoi = new StringSplitter(roiConfig, ',', 4);
 
       //Read config1 ROI parameters
-      p0_1 = splitter1->getItemAtIndex(0);
-      p1_1 = splitter1->getItemAtIndex(1);
-      p2_1 = splitter1->getItemAtIndex(2);
-      p3_1 = splitter1->getItemAtIndex(3); 
-      config1TopLeftX = p0_1.toInt();
-      config1TopLeftY = p1_1.toInt();
-      config1BottomRightX = p2_1.toInt();
-      config1BottomRightY = p3_1.toInt(); 
-      Serial.println(config1TopLeftX);  
-      Serial.println(config1TopLeftY);
-      Serial.println(config1BottomRightX);
-      Serial.println(config1BottomRightY);
+      p0 = splitterRoi->getItemAtIndex(0);
+      p1 = splitterRoi->getItemAtIndex(1);
+      p2 = splitterRoi->getItemAtIndex(2);
+      p3 = splitterRoi->getItemAtIndex(3); 
+      //config1TopLeftX = p0_1.toInt();
+      //config1TopLeftY = p1_1.toInt();
+      //config1BottomRightX = p2_1.toInt();
+      //config1BottomRightY = p3_1.toInt(); 
+      ROI_height = p0.toInt();
+      ROI_width = p1.toInt();
+      center[0] = p2.toInt();
+      center[1] = p3.toInt();
+      Serial.println(ROI_height);  
+      Serial.println(ROI_width);
+      Serial.println(center[0]);
+      Serial.println(center[1]);
       //vl531Init(1); // Initialize sensor for zone 1
-      client.publish(mqttRoiConfig1Topic, "OK");  
-    }
-  }
-  else if (topic_str == mqttRoiConfig2Topic) {
-    if (message.length() > 4) {
-      String roiConfig2 = message;
-      String p0_2, p1_2, p2_2, p3_2;
-      StringSplitter *splitter2 = new StringSplitter(roiConfig2, ',', 4);
-
-      //Read config1 ROI parameters
-      p0_2 = splitter2->getItemAtIndex(0);
-      p1_2 = splitter2->getItemAtIndex(1);
-      p2_2 = splitter2->getItemAtIndex(2);
-      p3_2 = splitter2->getItemAtIndex(3); 
-      config2TopLeftX = p0_2.toInt();
-      config2TopLeftY = p1_2.toInt();
-      config2BottomRightX = p2_2.toInt();
-      config2BottomRightY = p3_2.toInt(); 
-      Serial.println(config2TopLeftX);  
-      Serial.println(config2TopLeftY);
-      Serial.println(config2BottomRightX);
-      Serial.println(config2BottomRightY);
-      //vl531Init(2); // Initialize sensor for zone 2
-      client.publish(mqttRoiConfig2Topic, "OK");  
+      client.publish(mqttRoiConfigTopic, "OK");  
     }
   }
   else if (topic_str == mqttDistanceModeTopic) {
@@ -184,10 +180,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       else if (message == "long") {     
         VL53L1_DISTANCE_MODE = "long";
         client.publish(mqttDistanceModeTopic, "OK");
-      }      
-      // Initialize sensor with new congig. value 
-      //vl531Init(1);    
-      
+      }          
       if (DEBUG) { 
         Serial.print("mqttDistanceModeTopic -> ");
         Serial.println(VL53L1_DISTANCE_MODE);
@@ -240,10 +233,8 @@ void topicSubscribe() {
     client.subscribe(mqttMeasurementBudgetTopic);
     Serial.println(mqttMeasurementPeriodTopic);
     client.subscribe(mqttMeasurementPeriodTopic);
-    Serial.println(mqttRoiConfig1Topic); 
-    client.subscribe(mqttRoiConfig1Topic);    
-    Serial.println(mqttRoiConfig2Topic); 
-    client.subscribe(mqttRoiConfig2Topic);  
+    Serial.println(mqttRoiConfigTopic); 
+    client.subscribe(mqttRoiConfigTopic);     
     Serial.println(mqttDistance1MeasurementTopic); 
     client.subscribe(mqttDistance1MeasurementTopic);  
     Serial.println(mqttDistance2MeasurementTopic); 
@@ -354,8 +345,12 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
           Serial.print("One person has entered in the room. People in the room now: ");
           Serial.print(peopleCounter);
         } else if ((PathTrack[1] == 2)  && (PathTrack[2] == 3) && (PathTrack[3] == 1)) {
-          // This an exit
-          peopleCounter --;
+          // Prevent negative numbers on the counter        
+          if (peopleCounter != 0)
+            peopleCounter --;
+          else
+            peopleCounter = 0;
+            
           Serial.print("One person has exited the room. People in the room now: ");
           Serial.print(peopleCounter);  
           }
@@ -433,8 +428,7 @@ void setup() {
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
-  sprintf(mqttRoiConfig1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG1_TOPIC); 
-  sprintf(mqttRoiConfig2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG2_TOPIC);
+  sprintf(mqttRoiConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG_TOPIC); 
   sprintf(mqttDistance1MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE1_MEASUREMENT_TOPIC);
   sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
   sprintf(mqttDistanceModeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MODE_TOPIC);
