@@ -454,7 +454,7 @@ void loop() {
   char temp[50];
   String temp_str;
   unsigned long currentMillis = 0;
-  uint16_t RangingData;
+  uint16_t RangingData, mqttDistance1, mqttDistance2;
 
 
   // If reset connection is lost reset after 20sec.
@@ -481,20 +481,29 @@ void loop() {
   //------
   if ((currentMillis - measPreviousMillisRanging) >=  RANGING_PERIOD_MS) {
  
-    RangingData = vl531Init(); 
 
    // if (RangingData != 0) { // Check if we got meaningful distance data
     distance1Flag = true;
       
-    temp_str = String(RangingData); //converting ftemp (the float variable above) to a string
+    temp_str = String(mqttDistance1); //converting ftemp (the float variable above) to a string
 
-    // Add timestamp to distance measurement
+    // Add timestamp to distance measurement1, zone0
     temp_str.concat(',');
     temp_str.concat(String(millis()));
       
     temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
     client.publish(mqttDistance1MeasurementTopic, temp);  
+
+    temp_str = String(mqttDistance2); //converting ftemp (the float variable above) to a string
+
+    // Add timestamp to distance measurement2, zone1 
+    temp_str.concat(',');
+    temp_str.concat(String(millis()));
+      
+    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+
+    client.publish(mqttDistance2MeasurementTopic, temp);  
   //  }
     Serial.print("MQTT report, distance: ");
     Serial.println(RangingData);
@@ -510,6 +519,12 @@ void loop() {
   RangingData = vl531Init();
   
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
+
+  if (zone == 0)
+    mqttDistance1 = RangingData;
+
+  if (zone == 1)
+    mqttDistance2 = RangingData;
 
   zone++;
   zone = zone%2;
