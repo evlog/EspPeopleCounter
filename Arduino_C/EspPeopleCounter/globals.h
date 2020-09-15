@@ -87,18 +87,6 @@ uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0;
 
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
 
-// Define ROI config1
-uint32_t config1TopLeftX = 0;
-uint32_t config1TopLeftY = 0; 
-uint32_t config1BottomRightX = 0; 
-uint32_t config1BottomRightY = 0;
-
-// Define ROI config2
-uint32_t config2TopLeftX = 0;
-uint32_t config2TopLeftY = 0; 
-uint32_t config2BottomRightX = 0; 
-uint32_t config2BottomRightY = 0;
-
 // Define distance metering mode of the sensor (short or long, default is long)
 String  VL53L1_DISTANCE_MODE = "long";
 //#######
@@ -123,6 +111,7 @@ static int LeftPreviousStatus = NOBODY;
 static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
+// Define ROI config1
 static int center[2] = {239,175}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
