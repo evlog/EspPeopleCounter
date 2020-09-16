@@ -8,6 +8,8 @@
 #include <StringSplitter.h>
 //#include "src/vl53l1x-st-api/vl53l1_api.h"
 #include <SparkFun_VL53L1X.h>
+//#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
 #include "globals.h"
 // ----- 
 // -----
@@ -16,6 +18,51 @@
 
 
 SFEVL53L1X distanceSensor(Wire);
+
+// HTTP flash update functions
+// -----
+void update_started() {
+  Serial.println("CALLBACK:  HTTP update process started");
+}
+
+void update_finished() {
+  Serial.println("CALLBACK:  HTTP update process finished");
+} 
+
+void update_progress(int cur, int total) {
+  Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+}
+
+void update_error(int err) {
+  Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+}
+
+void flashUpdate() {
+  if (WiFi.status() == WL_CONNECTED) {
+
+    //WiFiClient Wclient;  
+    
+     t_httpUpdate_return ret = ESPhttpUpdate.update(UPDATE_BINARY_FILE_PATH);
+    // Or:
+   // t_httpUpdate_return ret = ESPhttpUpdate.update(Wclient, "http://192.168.1.40/subs/figures/", 80, "test.bin");
+
+    switch (ret) {
+      case HTTP_UPDATE_FAILED:
+        Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+        break;
+
+      case HTTP_UPDATE_NO_UPDATES:
+        Serial.println("HTTP_UPDATE_NO_UPDATES");
+        break;
+
+      case HTTP_UPDATE_OK:
+        Serial.println("HTTP_UPDATE_OK");
+        break;
+    }
+  }
+}
+// -----
+// -----
 
 boolean isValidNumber(String str){
    for(byte i=0;i<str.length();i++)
@@ -65,6 +112,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   p[length] = NULL;
   String message(p);
   String topic_str(topic);
+  char temp[200];
+  String temp_str;
+  uint32_t tmp_int;
 
   // Print received messages and topics
   //------
@@ -197,6 +247,67 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }  
+  else if (topic_str == mqttFlashUpdateTopic) {
+    if (isValidNumber(message)) {
+      if (message.toInt() == 1) {   
+        client.publish(mqttFlashUpdateTopic, "OK");
+        if (DEBUG) { 
+          Serial.print("mqttFlashUpdateTopic -> ");
+          Serial.println(message.toInt());
+          Serial.println("Flash update triggered via web interface...");
+          flashUpdate();
+        }
+      }
+    }
+  } 
+  else if (topic_str == mqttGetSensorConfigTopic) {
+    if (isValidNumber(message)) {
+      if (message.toInt() == 1) {   
+        //client.publish(mqttGetSensorConfigTopic, "OK");
+        if (DEBUG) { 
+          Serial.print("mqttGetSensorConfigTopic -> ");
+          Serial.println(message.toInt());
+          Serial.println("Sensor configuration parameters:");
+
+          temp_str = "MEASUREMENT_BUDGET_MS: ";
+          temp_str.concat(String(MEASUREMENT_BUDGET_MS));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nINTER_MEASUREMENT_PERIOD_MS: ");
+          temp_str.concat(String(INTER_MEASUREMENT_PERIOD_MS));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nDIST_THRESHOLD_MAX: ");
+          tmp_int = DIST_THRESHOLD_MAX[0];
+          //temp_str.concat(String(tmp_int));
+          temp_str.concat('79854334967,');
+          //temp_str.concat(String(DIST_THRESHOLD_MAX[1]));
+          temp_str.toCharArray(temp, temp_str.length() + 1);
+          client.publish(mqttGetSensorConfigTopic, temp);
+          Serial.println(temp_str);
+
+          //temp_str.concat("|\nROI_CENTER: ");
+          //temp_str.concat(String(center[0]));
+          //temp_str.concat(',');
+          //temp_str.concat(String(center[1]));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          //temp_str.concat("|\nVL53L1_DISTANCE_MODE: ");
+          //temp_str.concat(VL53L1_DISTANCE_MODE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+          
+        }
+      }
+    }
+  }  
   /*else if (topic_str == mqttDistance1MeasurementTopic) {
     if (isValidNumber(message)) {
       INTER_MEASUREMENT_PERIOD_MS = message.toInt();
@@ -243,6 +354,10 @@ void topicSubscribe() {
     client.subscribe(mqttDistanceModeTopic); 
     Serial.println(mqttRangingPeriodTopic); 
     client.subscribe(mqttRangingPeriodTopic); 
+    Serial.println(mqttFlashUpdateTopic); 
+    client.subscribe(mqttFlashUpdateTopic); 
+    Serial.println(mqttGetSensorConfigTopic); 
+    client.subscribe(mqttGetSensorConfigTopic); 
     client.loop();
   }  
 }
@@ -416,6 +531,16 @@ void setup() {
   // -----
   // -----  
 
+  // Define callback functions for HTTP flash update
+  //ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
+//
+  //ESPhttpUpdate.onStart(update_started);
+  //ESPhttpUpdate.onEnd(update_finished);
+  //ESPhttpUpdate.onProgress(update_progress);
+  //ESPhttpUpdate.onError(update_error);
+  // -----
+  // ----- 
+
   // Connect to MQTT broker and subscribe to topics 
   //------
   client.setCallback(mqttCallback);
@@ -433,6 +558,8 @@ void setup() {
   sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
   sprintf(mqttDistanceModeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MODE_TOPIC);
   sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
+  sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
+  sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
@@ -476,6 +603,23 @@ void loop() {
   //------
   //------
 
+  // inject the new ranged distance in the people counting algorithm
+  //------
+  RangingData = vl531Init();
+  
+  peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
+
+  if (zone == 0)
+    mqttDistance1 = RangingData;
+
+  if (zone == 1)
+    mqttDistance2 = RangingData;
+
+  zone++;
+  zone = zone%2;
+  //------
+  //------
+
   currentMillis = millis();
   // Check and publish the distance measurement 
   //------
@@ -513,21 +657,6 @@ void loop() {
 
   //------
   //------
-
-  // inject the new ranged distance in the people counting algorithm
-  //------
-  RangingData = vl531Init();
-  
-  peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
-
-  if (zone == 0)
-    mqttDistance1 = RangingData;
-
-  if (zone == 1)
-    mqttDistance2 = RangingData;
-
-  zone++;
-  zone = zone%2;
 
   // Report distance and people counter on Serial port every 200ms
   currentMillis = millis();

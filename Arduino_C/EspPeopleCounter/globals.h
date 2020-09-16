@@ -8,6 +8,8 @@ uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;
 int zone = 0;
 
+// Define the path of the binary file for flash update
+String UPDATE_BINARY_FILE_PATH = "http://192.168.1.40/subs/figures/test.bin";
 
 // AP WiFi manager setup
 // -----
@@ -24,7 +26,7 @@ const char* MQTT_USERNAME = "pi";
 const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "evlog.zapto.org";
+const char* MQTT_ADDRESS = "192.168.1.40";//"evlog.zapto.org";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
@@ -61,6 +63,12 @@ char mqttDistanceModeTopic[150];
 
 const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";
 char mqttRangingPeriodTopic[150];
+
+const char* MQTT_FLASH_UPDATE_TOPIC = "flashUpdate";
+char mqttFlashUpdateTopic[150];
+
+const char* MQTT_GET_SENSOR_CONFIG_TOPIC = "getSensorConfig";
+char mqttGetSensorConfigTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
@@ -103,7 +111,7 @@ static int SOMEONE = 1;
 static int LEFT = 0;
 static int RIGHT = 1;
 
-static int DIST_THRESHOLD_MAX[] = {1850, 1650};   // treshold of the two zones
+uint32_t DIST_THRESHOLD_MAX[] = {1850, 1650};   // treshold of the two zones
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
