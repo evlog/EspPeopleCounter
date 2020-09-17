@@ -619,7 +619,8 @@ void loop() {
   // inject the new ranged distance in the people counting algorithm
   //------
   RangingData = vl531Init(zone);
-  
+
+  peopleCounterVarPrev = peopleCounterVar;
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
 
   //Serial.println("**Zone:");
@@ -695,7 +696,7 @@ void loop() {
   //------
 
   currentMillis = millis();
-  // Check and publish the pleople counter value
+  // Check and publish the people counter value every PEOPLE_COUNTER_PERIOD_MS ms
   //------
   if ((currentMillis - measPreviousMillisPeople) >=  PEOPLE_COUNTER_PERIOD_MS) {
   //  if (distance1Flag) { // Check if we got meaningful distance data for both zone 1 and 2 and increase people counter
@@ -718,6 +719,26 @@ void loop() {
 
     measPreviousMillisPeople = millis();
   }
+
+  // Check and publish the people counter uppon a change
+  //------
+  if (peopleCounterVar != peopleCounterVarPrev) {
+      
+    temp_str = String(peopleCounterVar); //converting ftemp (the float variable above) to a string
+
+    // Add timestamp to distance measurement
+    temp_str.concat(',');
+    temp_str.concat(String(millis()));     
+
+    temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa..
+
+    client.publish(mqttPeopleCountTopic, temp);
+
+    Serial.print("MQTT report, people counter: ");
+    Serial.println(peopleCounterVar);    
+  }
+  //------
+  //------
 
   // Keep MQTT connection active
   client.loop();

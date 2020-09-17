@@ -6,6 +6,7 @@ unsigned long measPreviousMillisDataSerialReport = 0;
 
 uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;
+uint16_t peopleCounterVarPrev = 0;
 int zone = 0;
 
 uint16_t mqttDistance1, mqttDistance2;
