@@ -622,11 +622,11 @@ void loop() {
   
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
 
-  Serial.println("**Zone:");
-  Serial.print(zone); 
+  //Serial.println("**Zone:");
+  //Serial.print(zone); 
 
-  Serial.println("**Distance:");
-  Serial.print(RangingData); 
+  //Serial.println("**Distance:");
+  //Serial.print(RangingData); 
 
   if (zone == 0)
     mqttDistance1 = RangingData;
@@ -678,7 +678,7 @@ void loop() {
   //------
 
   // Report distance and people counter on Serial port every 200ms
- /* currentMillis = millis();
+  currentMillis = millis();
   if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
     Serial.print("mqttDistance1: ");
     Serial.println(mqttDistance1);
@@ -690,7 +690,7 @@ void loop() {
     Serial.println(peopleCounterVar);
 
     measPreviousMillisDataSerialReport = millis();
-  }*/
+  }
   //------
   //------
 
