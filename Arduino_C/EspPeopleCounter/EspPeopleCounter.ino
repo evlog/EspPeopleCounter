@@ -628,7 +628,6 @@ void loop() {
 
   zone++;
   zone = zone%2;
-  Serial.println(zone);
   //------
   //------
 
