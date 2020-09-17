@@ -87,6 +87,8 @@ uint16_t vl531Init(uint8_t zone) {
 
   distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
+  //Serial.println("Center:");
+  //Serial.println("center[zone]);
 
   if (VL53L1_DISTANCE_MODE == "short")
     distanceSensor.setDistanceModeShort();
@@ -592,7 +594,7 @@ void loop() {
   char temp[50];
   String temp_str;
   unsigned long currentMillis = 0;
-  uint16_t RangingData, mqttDistance1, mqttDistance2;
+  uint16_t RangingData;
 
 
   // If reset connection is lost reset after 20sec.

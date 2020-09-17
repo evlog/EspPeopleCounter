@@ -8,6 +8,8 @@ uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;
 int zone = 0;
 
+uint16_t mqttDistance1, mqttDistance2;
+
 // Define the path of the binary file for flash update
 String UPDATE_BINARY_FILE_PATH = "http://evlog.zapto.org/subs/figures/test.bin";
 
