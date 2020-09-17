@@ -620,6 +620,12 @@ void loop() {
   
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
 
+  Serial.println("**Zone:");
+  Serial.print(zone); 
+
+  Serial.println("**Distance:");
+  Serial.print(RangingData); 
+
   if (zone == 0)
     mqttDistance1 = RangingData;
 
@@ -649,7 +655,9 @@ void loop() {
     temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
     client.publish(mqttDistance1MeasurementTopic, temp);  
-//------------
+
+
+
     temp_str = String(mqttDistance2); //converting ftemp (the float variable above) to a string
 
     // Add timestamp to distance measurement2, zone1 
@@ -659,9 +667,7 @@ void loop() {
     temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
     client.publish(mqttDistance2MeasurementTopic, temp);  
-  //  }
-    Serial.print("MQTT report, distance: ");
-    Serial.println(RangingData);
+
 
     measPreviousMillisRanging =  millis();
   }
@@ -670,7 +676,7 @@ void loop() {
   //------
 
   // Report distance and people counter on Serial port every 200ms
-  currentMillis = millis();
+ /* currentMillis = millis();
   if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
     Serial.print("mqttDistance1: ");
     Serial.println(mqttDistance1);
@@ -682,7 +688,7 @@ void loop() {
     Serial.println(peopleCounterVar);
 
     measPreviousMillisDataSerialReport = millis();
-  }
+  }*/
   //------
   //------
 
