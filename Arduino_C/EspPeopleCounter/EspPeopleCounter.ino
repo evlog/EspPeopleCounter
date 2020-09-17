@@ -533,11 +533,6 @@ void setup() {
   Serial.print("Sensor MAC address: ");
   Serial.println(MAC_ADDRESS);
 
-  //Serial.println("Random:");
-  //randomSeed(analogRead(0));
-  //Serial.println(String(random(1, 20000)));
-  //randomSeed(analogRead(0)); 
-  //Serial.println(String(random(1, 20000)));
 
   Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
