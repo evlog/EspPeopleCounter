@@ -73,7 +73,7 @@ boolean isValidNumber(String str){
 } 
 
 // vl53l1 configruation and variables
-uint16_t vl531Init() {  
+uint16_t vl531Init(uint8_t zone) {  
   
   uint16_t distance;
 
@@ -85,7 +85,7 @@ uint16_t vl531Init() {
   else
     Serial.println("Sensor initialization failed");
 
-  distanceSensor.setROI(ROI_height, ROI_width, center[Zone]);  // first value: height of the zone, second value: width of the zone
+  distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
 
   if (VL53L1_DISTANCE_MODE == "short")
@@ -282,27 +282,38 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //Serial.println(temp_str);
 
           temp_str.concat("|\nDIST_THRESHOLD_MAX: ");
-          tmp_int = DIST_THRESHOLD_MAX[0];
-          //temp_str.concat(String(tmp_int));
-          temp_str.concat('79854334967,');
-          //temp_str.concat(String(DIST_THRESHOLD_MAX[1]));
+          temp_str.concat(String(DIST_THRESHOLD_MAX[0]));
+          temp_str.concat(',');
+          temp_str.concat(String(DIST_THRESHOLD_MAX[1]));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nROI_CENTER: ");
+          temp_str.concat(String(center[0]));
+          temp_str.concat(',');
+          temp_str.concat(String(center[1]));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nVL53L1_DISTANCE_MODE: ");
+          temp_str.concat(VL53L1_DISTANCE_MODE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nRANGING_PERIOD_MS: ");
+          temp_str.concat(RANGING_PERIOD_MS);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nPEOPLE_COUNTER_PERIOD_MS: ");
+          temp_str.concat(PEOPLE_COUNTER_PERIOD_MS);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println(temp_str);
-
-          //temp_str.concat("|\nROI_CENTER: ");
-          //temp_str.concat(String(center[0]));
-          //temp_str.concat(',');
-          //temp_str.concat(String(center[1]));
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          //temp_str.concat("|\nVL53L1_DISTANCE_MODE: ");
-          //temp_str.concat(VL53L1_DISTANCE_MODE);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
           
         }
       }
@@ -605,7 +616,7 @@ void loop() {
 
   // inject the new ranged distance in the people counting algorithm
   //------
-  RangingData = vl531Init();
+  RangingData = vl531Init(zone);
   
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
 
@@ -617,6 +628,7 @@ void loop() {
 
   zone++;
   zone = zone%2;
+  Serial.println(zone);
   //------
   //------
 
@@ -638,7 +650,7 @@ void loop() {
     temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
 
     client.publish(mqttDistance1MeasurementTopic, temp);  
-
+//------------
     temp_str = String(mqttDistance2); //converting ftemp (the float variable above) to a string
 
     // Add timestamp to distance measurement2, zone1 
@@ -661,8 +673,11 @@ void loop() {
   // Report distance and people counter on Serial port every 200ms
   currentMillis = millis();
   if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
-    Serial.print("Distance: ");
-    Serial.println(RangingData);
+    Serial.print("mqttDistance1: ");
+    Serial.println(mqttDistance1);
+
+    Serial.print("mqttDistance2: ");
+    Serial.println(mqttDistance2);
 
     Serial.print("People counter: ");
     Serial.println(peopleCounterVar);

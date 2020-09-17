@@ -9,7 +9,7 @@ uint16_t peopleCounterVar = 0;
 int zone = 0;
 
 // Define the path of the binary file for flash update
-String UPDATE_BINARY_FILE_PATH = "http://192.168.1.40/subs/figures/test.bin";
+String UPDATE_BINARY_FILE_PATH = "http://evlog.zapto.org/subs/figures/test.bin";
 
 // AP WiFi manager setup
 // -----
@@ -26,7 +26,7 @@ const char* MQTT_USERNAME = "pi";
 const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "192.168.1.40";//"evlog.zapto.org";
+const char* MQTT_ADDRESS = "evlog.zapto.org";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
