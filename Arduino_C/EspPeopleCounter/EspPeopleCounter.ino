@@ -19,6 +19,24 @@
 
 SFEVL53L1X distanceSensor(Wire);
 
+
+// -----
+// Function to return random MQTT_CLIENT name
+void randomMqttClientName() {
+  String MQTT_CLIENT_NAME;
+  Serial.println("Random:");
+  randomSeed(ESP.getCycleCount()); 
+  MQTT_CLIENT_NAME = "clientName";
+  MQTT_CLIENT_NAME.concat(String(random(1,30000)));
+  //MQTT_CLIENT_NAME.toCharArray(MQTT_CLIENT, MQTT_CLIENT_NAME.length() + 1);
+  MQTT_CLIENT = MQTT_CLIENT_NAME.c_str();
+  //sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
+  Serial.print("Client name: ");
+  Serial.println(MQTT_CLIENT);
+}
+// -----
+// -----
+
 // HTTP flash update functions
 // -----
 void update_started() {
@@ -515,6 +533,12 @@ void setup() {
   Serial.print("Sensor MAC address: ");
   Serial.println(MAC_ADDRESS);
 
+  //Serial.println("Random:");
+  //randomSeed(analogRead(0));
+  //Serial.println(String(random(1, 20000)));
+  //randomSeed(analogRead(0)); 
+  //Serial.println(String(random(1, 20000)));
+
   Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
@@ -575,6 +599,8 @@ void setup() {
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
+
+  randomMqttClientName();
 
   // Subscribe to topics and reconnect to MQTT server
   mqttReconnect();
