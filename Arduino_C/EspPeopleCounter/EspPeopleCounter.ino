@@ -172,14 +172,25 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       //Read threshold
       t0 = splitterTh->getItemAtIndex(0);
       t1 = splitterTh->getItemAtIndex(1);
-      
-      DIST_THRESHOLD_MAX[0] = t0.toInt();
-      DIST_THRESHOLD_MAX[1] = t1.toInt();
 
+
+      if ((t0.toInt() != 0) && (t1.toInt() != 0)) {
+        if ((t0.toInt() < 1000) | (t0.toInt()) > 4000 | (t1.toInt() < 1000) | (t1.toInt() > 4000)) {
+          Serial.print(mqttPeopleCountThresholdTopic);
+          Serial.print("->ERROR");
+          client.publish(mqttPeopleCountThresholdTopic, "ERROR");
+          client.publish(mqttDummyTopic, "Ignore this message");
+        }
+        else {
+          Serial.print(mqttPeopleCountThresholdTopic);
+          Serial.print("->OK");
+          DIST_THRESHOLD_MAX[0] = t0.toInt();
+          DIST_THRESHOLD_MAX[1] = t1.toInt();
+          client.publish(mqttPeopleCountThresholdTopic, "OK");
+        }
+      }
       Serial.println(DIST_THRESHOLD_MAX[0]);
       Serial.println(DIST_THRESHOLD_MAX[1]);
-
-      client.publish(mqttPeopleCountThresholdTopic, "OK");
     }
   }
   else if (topic_str == mqttSensorRebootTopic) {
@@ -389,6 +400,8 @@ void topicSubscribe() {
     client.subscribe(mqttFlashUpdateTopic); 
     Serial.println(mqttGetSensorConfigTopic); 
     client.subscribe(mqttGetSensorConfigTopic); 
+    //Serial.println(mqttDummyTopic); 
+    client.subscribe(mqttDummyTopic); 
     client.loop();
   }  
 }
@@ -592,6 +605,7 @@ void setup() {
   sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
   sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
+  sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 

@@ -73,6 +73,9 @@ char mqttFlashUpdateTopic[150];
 const char* MQTT_GET_SENSOR_CONFIG_TOPIC = "getSensorConfig";
 char mqttGetSensorConfigTopic[150];
 
+const char* MQTT_DUMMY_TOPIC = "dummy";
+char mqttDummyTopic[150];
+
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
 
