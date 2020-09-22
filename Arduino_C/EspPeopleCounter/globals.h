@@ -1,4 +1,6 @@
+
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
+int eeprom_addr = 0;
 
 unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisPeople = 0;

@@ -10,6 +10,7 @@
 #include <SparkFun_VL53L1X.h>
 //#include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
+#include <EEPROM.h>
 #include "globals.h"
 // ----- 
 // -----
@@ -20,8 +21,8 @@
 SFEVL53L1X distanceSensor(Wire);
 
 
-// -----
 // Function to return random MQTT_CLIENT name
+// -----
 void randomMqttClientName() {
   String MQTT_CLIENT_NAME;
   Serial.println("Random:");
@@ -33,6 +34,177 @@ void randomMqttClientName() {
   //sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
   Serial.print("Client name: ");
   Serial.println(MQTT_CLIENT);
+}
+// ----- 
+// -----
+
+// Function to read EEPROM and initialize config. parameter
+// -----
+void initEepromConfigWrite() {
+  intToEeprom(MEASUREMENT_BUDGET_MS, 1);
+  intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
+  intToEeprom(DIST_THRESHOLD_MAX[0], 13);
+  intToEeprom(DIST_THRESHOLD_MAX[1], 19);
+  intToEeprom(center[0], 25);
+  intToEeprom(center[1], 31);
+  if(VL53L1_DISTANCE_MODE == "short")
+    intToEeprom(1, 37);
+  else if(VL53L1_DISTANCE_MODE == "long")
+    intToEeprom(2, 37);    
+  intToEeprom(RANGING_PERIOD_MS, 43); 
+  Serial.println("**");
+  Serial.println(PEOPLE_COUNTER_PERIOD_MS);
+  intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
+}
+// -----
+// -----
+
+// Function to store 6-digit int value to EEPROM
+// -----
+void intToEeprom(uint32_t param, int addr) {
+  String f;
+
+  f = String(param);
+
+ if (param < 10) {
+  EEPROM.write(addr, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+1, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+2, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+3, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+4, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(0,1).toInt());
+  EEPROM.commit();
+ }
+ else if((param >= 10) && (param < 100)) {
+  EEPROM.write(addr, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+1, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+2, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+3, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+4, f.substring(0,1).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(1,2).toInt());
+  EEPROM.commit();
+ }
+ else if((param >= 100) && (param < 1000)) {
+  EEPROM.write(addr, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+1, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+2, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+3, f.substring(0,1).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+4, f.substring(1,2).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(2,3).toInt());
+  EEPROM.commit();
+ }
+ else if((param >= 1000) && (param < 10000)) {
+  EEPROM.write(addr, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+1, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+2, f.substring(0,1).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+3, f.substring(1,2).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+4, f.substring(2,3).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(3,4).toInt());
+  EEPROM.commit();
+ }
+ else if((param >= 10000) && (param < 100000)) {
+  EEPROM.write(addr, 0);
+  EEPROM.commit();
+  EEPROM.write(addr+1, f.substring(0,1).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+2, f.substring(1,2).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+3, f.substring(2,3).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+4, f.substring(3,4).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(4,5).toInt());
+  EEPROM.commit();
+ }
+ else if(param >= 100000) {
+  EEPROM.write(addr, f.substring(0,1).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+1, f.substring(1,2).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+2, f.substring(2,3).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+3, f.substring(3,4).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+4, f.substring(4,5).toInt());
+  EEPROM.commit();
+  EEPROM.write(addr+5, f.substring(5,6).toInt());
+  EEPROM.commit();
+ }
+}
+// -----
+// -----
+
+// Function to read EEPROM and initialize config. parameters
+// -----
+void restoreEppromConfig() {
+  Serial.println("Restore config. parameters from EEPROM");
+  MEASUREMENT_BUDGET_MS = EepromToInt(1);
+  Serial.print("MEASUREMENT_BUDGET_MS:");
+  Serial.println(MEASUREMENT_BUDGET_MS);
+  INTER_MEASUREMENT_PERIOD_MS = EepromToInt(7);
+  Serial.print("INTER_MEASUREMENT_PERIOD_MS:");
+  Serial.println(INTER_MEASUREMENT_PERIOD_MS);
+  DIST_THRESHOLD_MAX[0] = EepromToInt(13);
+  Serial.print("DIST_THRESHOLD_MAX[0]:");
+  Serial.println(DIST_THRESHOLD_MAX[0]);
+  DIST_THRESHOLD_MAX[1] = EepromToInt(19);
+  Serial.print("DIST_THRESHOLD_MAX[1]:");
+  Serial.println(DIST_THRESHOLD_MAX[1]);
+  center[0] = EepromToInt(25);
+  Serial.print("center[0]:");
+  Serial.println(center[0]);
+  center[1] = EepromToInt(31);
+  Serial.print("center[1]:");
+  Serial.println(center[1]);
+  if(EepromToInt(37) == 1)
+    VL53L1_DISTANCE_MODE = "short";
+  if(EepromToInt(37) == 2)
+    VL53L1_DISTANCE_MODE = "long";  
+  Serial.print("VL53L1_DISTANCE_MODE:");
+  Serial.println(VL53L1_DISTANCE_MODE);
+  RANGING_PERIOD_MS = EepromToInt(43);
+  Serial.print("RANGING_PERIOD_MS:");
+  Serial.println(RANGING_PERIOD_MS);
+  PEOPLE_COUNTER_PERIOD_MS = EepromToInt(49); 
+  Serial.print("PEOPLE_COUNTER_PERIOD_MS:");
+  Serial.println(PEOPLE_COUNTER_PERIOD_MS); 
+}
+// -----
+// -----
+
+// Function to read 6-digit int value from EEPROM
+// -----
+uint32_t EepromToInt(int addr) {
+  uint32_t param = 0;
+
+  param +=  EEPROM.read(addr) * 100000;
+  param +=  EEPROM.read(addr+1) * 10000;
+  param +=  EEPROM.read(addr+2) * 1000;
+  param +=  EEPROM.read(addr+3) * 100;
+  param +=  EEPROM.read(addr+4) * 10;
+  param +=  EEPROM.read(addr+5) * 1;
+
+  return param;
 }
 // -----
 // -----
@@ -177,13 +349,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if ((t0.toInt() != 0) && (t1.toInt() != 0)) {
         if ((t0.toInt() < 1000) | (t0.toInt()) > 4000 | (t1.toInt() < 1000) | (t1.toInt() > 4000)) {
           Serial.print(mqttPeopleCountThresholdTopic);
-          Serial.print("->ERROR");
+          Serial.println("->ERROR");
           client.publish(mqttPeopleCountThresholdTopic, "ERROR");
           client.publish(mqttDummyTopic, "Ignore this message");
         }
         else {
           Serial.print(mqttPeopleCountThresholdTopic);
-          Serial.print("->OK");
+          Serial.println("->OK");
           DIST_THRESHOLD_MAX[0] = t0.toInt();
           DIST_THRESHOLD_MAX[1] = t1.toInt();
           client.publish(mqttPeopleCountThresholdTopic, "OK");
@@ -203,10 +375,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   else if (topic_str == mqttMeasurementBudgetTopic) {
     if (isValidNumber(message)) {
-      MEASUREMENT_BUDGET_MS = message.toInt();
-      // Initialize sensor with new congig. value 
-      //vl531Init(1); 
-      client.publish(mqttMeasurementBudgetTopic, "OK");
+      if ((message.toInt() != 15) && (message.toInt() != 20) && (message.toInt() != 33) && (message.toInt() != 50) && (message.toInt() != 100) && (message.toInt() != 200) && (message.toInt() != 500)) {     
+        Serial.print(mqttMeasurementBudgetTopic);
+        Serial.println("->ERROR");
+        client.publish(mqttMeasurementBudgetTopic, "ERROR");
+      }
+      else {
+        MEASUREMENT_BUDGET_MS = message.toInt();
+        intToEeprom(MEASUREMENT_BUDGET_MS, 1);
+        Serial.print(mqttMeasurementBudgetTopic);
+        Serial.println("->OK");
+        client.publish(mqttMeasurementBudgetTopic, "OK");
+      }
       if (DEBUG) { 
         Serial.print("mqttMeasurementBudgetTopic -> ");
         Serial.println(MEASUREMENT_BUDGET_MS);
@@ -215,10 +395,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   else if (topic_str == mqttMeasurementPeriodTopic) {
     if (isValidNumber(message)) {
-      INTER_MEASUREMENT_PERIOD_MS = message.toInt();
-      // Initialize sensor with new congig. value 
-      //vl531Init(1);    
-      client.publish(mqttMeasurementPeriodTopic, "OK");
+      if (message.toInt() < 20) {
+        Serial.print(mqttMeasurementPeriodTopic);
+        Serial.println("->ERROR");
+        client.publish(mqttMeasurementPeriodTopic, "ERROR");
+      }
+      else {
+        INTER_MEASUREMENT_PERIOD_MS = message.toInt();     
+        Serial.print(mqttMeasurementPeriodTopic);
+        Serial.println("->OK");
+        client.publish(mqttMeasurementPeriodTopic, "OK");   
+      }
+
       if (DEBUG) { 
         Serial.print("mqttMeasurementPeriodTopic -> ");
         Serial.println(INTER_MEASUREMENT_PERIOD_MS);
@@ -270,8 +458,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   else if (topic_str == mqttRangingPeriodTopic) {
     if (isValidNumber(message)) {
-      RANGING_PERIOD_MS = message.toInt();   
-      client.publish(mqttRangingPeriodTopic, "OK");
+      if (message.toInt() < 1000) {
+        Serial.print(mqttRangingPeriodTopic);
+        Serial.println("->ERROR");
+      }
+      else {
+        RANGING_PERIOD_MS = message.toInt();
+        Serial.print(mqttRangingPeriodTopic);
+        Serial.println("->OK");
+        client.publish(mqttRangingPeriodTopic, "OK");
+      }   
       if (DEBUG) { 
         Serial.print("mqttRangingPeriodTopic -> ");
         Serial.println(RANGING_PERIOD_MS);
@@ -616,6 +812,22 @@ void setup() {
   //------
   //------
 
+  // Initialize EPPROM memory
+  EEPROM.begin(512);
+  
+
+  //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
+  if (EEPROM.read(0) != 5) {
+    Serial.println("Virgin boot");
+    EEPROM.write(eeprom_addr, 5);
+    EEPROM.commit();
+
+    initEepromConfigWrite();
+  }
+  else {
+    restoreEppromConfig();
+  }
+  
 
 
 
