@@ -858,6 +858,7 @@ void loop() {
   // Reconnect to MQTT broker if not connected
   //------
   if (!client.connected()) {
+    randomMqttClientName();
     mqttReconnect();
   }
   //------
