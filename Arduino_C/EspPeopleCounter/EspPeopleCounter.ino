@@ -40,6 +40,38 @@ void randomMqttClientName() {
 
 // Function to read EEPROM and initialize config. parameter
 // -----
+void mqttForceInitConfig() {
+  MEASUREMENT_BUDGET_MS = 50;
+  intToEeprom(MEASUREMENT_BUDGET_MS, 1);
+  INTER_MEASUREMENT_PERIOD_MS = 55;
+  intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
+  DIST_THRESHOLD_MAX[0] = 1850;
+  DIST_THRESHOLD_MAX[1] = 1650;
+  intToEeprom(DIST_THRESHOLD_MAX[0], 13);
+  intToEeprom(DIST_THRESHOLD_MAX[1], 19);
+  center[0] = 239;
+  center[1] = 175;
+  intToEeprom(center[0], 25);
+  intToEeprom(center[1], 31);
+  VL53L1_DISTANCE_MODE = "long";
+  if(VL53L1_DISTANCE_MODE == "short")
+    intToEeprom(1, 37);
+  else if(VL53L1_DISTANCE_MODE == "long")
+    intToEeprom(2, 37);
+  RANGING_PERIOD_MS = 10000;    
+  intToEeprom(RANGING_PERIOD_MS, 43); 
+  PEOPLE_COUNTER_PERIOD_MS = 120000;
+  intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
+  ROI_height = 5;
+  intToEeprom(ROI_height, 55);
+  ROI_width = 5;
+  intToEeprom(ROI_width, 61);
+}
+// -----
+// -----
+
+// Function to read EEPROM and initialize config. parameter
+// -----
 void initEepromConfigWrite() {
   intToEeprom(MEASUREMENT_BUDGET_MS, 1);
   intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
@@ -55,6 +87,8 @@ void initEepromConfigWrite() {
   Serial.println("**");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS);
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
+  intToEeprom(ROI_height, 55);
+  intToEeprom(ROI_width, 61);
 }
 // -----
 // -----
@@ -188,6 +222,12 @@ void restoreEppromConfig() {
   PEOPLE_COUNTER_PERIOD_MS = EepromToInt(49); 
   Serial.print("PEOPLE_COUNTER_PERIOD_MS:");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS); 
+  ROI_height = EepromToInt(55); 
+  Serial.print("ROI_height:");
+  Serial.println(ROI_height); 
+  ROI_width = EepromToInt(61); 
+  Serial.print("ROI_width:");
+  Serial.println(ROI_width); 
 }
 // -----
 // -----
@@ -357,7 +397,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           Serial.print(mqttPeopleCountThresholdTopic);
           Serial.println("->OK");
           DIST_THRESHOLD_MAX[0] = t0.toInt();
+          intToEeprom(DIST_THRESHOLD_MAX[0], 13);
           DIST_THRESHOLD_MAX[1] = t1.toInt();
+          intToEeprom(DIST_THRESHOLD_MAX[1], 19);
           client.publish(mqttPeopleCountThresholdTopic, "OK");
         }
       }
@@ -401,7 +443,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         client.publish(mqttMeasurementPeriodTopic, "ERROR");
       }
       else {
-        INTER_MEASUREMENT_PERIOD_MS = message.toInt();     
+        INTER_MEASUREMENT_PERIOD_MS = message.toInt();  
+        intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);   
         Serial.print(mqttMeasurementPeriodTopic);
         Serial.println("->OK");
         client.publish(mqttMeasurementPeriodTopic, "OK");   
@@ -429,9 +472,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       //config1BottomRightX = p2_1.toInt();
       //config1BottomRightY = p3_1.toInt(); 
       ROI_height = p0.toInt();
+      intToEeprom(ROI_height, 55);
       ROI_width = p1.toInt();
+      intToEeprom(ROI_width, 61);
       center[0] = p2.toInt();
+      intToEeprom(center[0], 13);
       center[1] = p3.toInt();
+      intToEeprom(center[1], 19);
       Serial.println(ROI_height);  
       Serial.println(ROI_width);
       Serial.println(center[0]);
@@ -444,10 +491,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (message.length() > 3) {
       if (message == "short") {
         VL53L1_DISTANCE_MODE = "short";
+        intToEeprom(1, 37);
         client.publish(mqttDistanceModeTopic, "OK");
       }
       else if (message == "long") {     
         VL53L1_DISTANCE_MODE = "long";
+        intToEeprom(2, 37);
         client.publish(mqttDistanceModeTopic, "OK");
       }          
       if (DEBUG) { 
@@ -464,6 +513,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
       else {
         RANGING_PERIOD_MS = message.toInt();
+        intToEeprom(RANGING_PERIOD_MS, 43);
         Serial.print(mqttRangingPeriodTopic);
         Serial.println("->OK");
         client.publish(mqttRangingPeriodTopic, "OK");
@@ -482,11 +532,24 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           Serial.print("mqttFlashUpdateTopic -> ");
           Serial.println(message.toInt());
           Serial.println("Flash update triggered via web interface...");
-          flashUpdate();
         }
+        flashUpdate();
       }
     }
   } 
+  else if (topic_str == mqttRestoreSensorConfigTopic) {
+    if (isValidNumber(message)) {
+      if (message.toInt() == 1) {   
+        client.publish(mqttRestoreSensorConfigTopic, "OK");
+        if (DEBUG) { 
+          Serial.print("mqttRestoreSensorConfigTopic -> ");
+          Serial.println(message.toInt());
+          Serial.println("Flash update triggered via web interface...");
+        }
+        mqttForceInitConfig();
+      }
+    }
+  }
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -596,6 +659,8 @@ void topicSubscribe() {
     client.subscribe(mqttFlashUpdateTopic); 
     Serial.println(mqttGetSensorConfigTopic); 
     client.subscribe(mqttGetSensorConfigTopic); 
+    Serial.println(mqttRestoreSensorConfigTopic); 
+    client.subscribe(mqttRestoreSensorConfigTopic); 
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -801,6 +866,7 @@ void setup() {
   sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
   sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
+  sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");

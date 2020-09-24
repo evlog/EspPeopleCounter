@@ -75,6 +75,9 @@ char mqttFlashUpdateTopic[150];
 const char* MQTT_GET_SENSOR_CONFIG_TOPIC = "getSensorConfig";
 char mqttGetSensorConfigTopic[150];
 
+const char* MQTT_RESTORE_SENSOR_CONFIG_TOPIC = "restoreSensorConfig";
+char mqttRestoreSensorConfigTopic[150];
+
 const char* MQTT_DUMMY_TOPIC = "dummy";
 char mqttDummyTopic[150];
 
