@@ -820,6 +820,8 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
 
 
 void setup() {
+  int i;
+  
   // put your setup code here, to run once:
   Serial.begin (115200);  
   Serial.println("Serial comm established");
@@ -899,8 +901,82 @@ void setup() {
 
   // Initialize EPPROM memory
   EEPROM.begin(512);
+
+  // Initialize measurements array
+  for (i = 0; i < measArrSize; i++)
+    measArr[i] = 0;
+
+  // Testt
+  measArr[0] = 3;
+  measArr[1] = 5;
+  measArr[2] = 8;
+
+  uint16_t arrSize = 3;
+  uint32_t sum = 0;
+  float mean;
+  float dev = 0;
+  float temp = 0;
+
+
+  for (i = 0; i < arrSize; i++) {
+    sum += measArr[i];
+    Serial.println(measArr[i]);
+  }
   
 
+  mean = (float)sum / (float)arrSize;
+
+  for (i = 0; i < arrSize; i++)
+    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
+
+
+  Serial.println("Temp:");
+  Serial.println(temp);
+
+  dev = sqrt((1.0/(float)(arrSize - 1)) * temp);
+
+  Serial.println("Average:");
+  Serial.println(mean);
+
+  Serial.println("Deviation:");
+  Serial.println(dev);
+  
+
+  for (i = (measArrSize - 1); i >= 1; i--)
+    measArr[i] = measArr[i-1];
+
+  measArr[0] = 10;
+
+  sum = 0;
+  dev = 0;
+  temp = 0;
+
+  for (i = 0; i < arrSize; i++) {
+    sum += measArr[i];
+    Serial.println(measArr[i]);
+  }
+  
+
+  mean = (float)sum / (float)arrSize;
+
+  for (i = 0; i < arrSize; i++)
+    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
+
+
+  Serial.println("Temp:");
+  Serial.println(temp);
+
+  dev = sqrt((1.0/(float)(arrSize - 1)) * temp);
+
+  Serial.println("Average:");
+  Serial.println(mean);
+
+  Serial.println("Deviation:");
+  Serial.println(dev);
+
+
+  //
+  
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
   if (EEPROM.read(0) != 5) {
     Serial.println("Virgin boot");

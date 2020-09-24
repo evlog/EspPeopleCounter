@@ -16,6 +16,10 @@ uint16_t mqttDistance1, mqttDistance2;
 // Define the path of the binary file for flash update
 String UPDATE_BINARY_FILE_PATH = "http://evlog.zapto.org/subs/figures/test.bin";
 
+// Array to hold measurements for the standard deviation calculation
+const int measArrSize = 500;
+uint32_t measArr[measArrSize] = {};
+
 // AP WiFi manager setup
 // -----
 WiFiManager wifiManager;
