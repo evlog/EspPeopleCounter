@@ -672,13 +672,32 @@ void topicSubscribe() {
 void mqttReconnect() {
   // Loop until we're reconnected
   uint8_t counter = 0;
+
+  // Generate random client ID name
+  //------
+  String MQTT_CLIENT_NAME;
+  Serial.println("Random:");
+  randomSeed(ESP.getCycleCount()); 
+  MQTT_CLIENT_NAME = "clientName";
+  MQTT_CLIENT_NAME.concat(String(random(1,30000)));
+  //MQTT_CLIENT_NAME.toCharArray(MQTT_CLIENT, MQTT_CLIENT_NAME.length() + 1);
+  MQTT_CLIENT = MQTT_CLIENT_NAME.c_str();
+  //sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
+  Serial.print("Client name: ");
+  Serial.println(MQTT_CLIENT);
+  //------
+  //------
+  
   
   while (!client.connected()) {
     counter++;
     if (DEBUG) Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD)) {
-      if (DEBUG) Serial.println("MQTT connected");
+      if (DEBUG) {
+        Serial.println("MQTT connected");
+        Serial.println(MQTT_CLIENT);
+      }
       topicSubscribe();
     } 
     
@@ -871,7 +890,7 @@ void setup() {
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
-  randomMqttClientName();
+  //randomMqttClientName();
 
   // Subscribe to topics and reconnect to MQTT server
   mqttReconnect();
@@ -924,7 +943,7 @@ void loop() {
   // Reconnect to MQTT broker if not connected
   //------
   if (!client.connected()) {
-    randomMqttClientName();
+    //randomMqttClientName();
     mqttReconnect();
   }
   //------
