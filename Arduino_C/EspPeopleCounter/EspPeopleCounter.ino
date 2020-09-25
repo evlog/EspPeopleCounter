@@ -1015,6 +1015,10 @@ void setup() {
   else {
     restoreEppromConfig();
   }
+
+  //measArr[0] = 5;
+  //measArr[1] = 8;
+  //measArr[2] = 10;
   
 
 
@@ -1031,6 +1035,7 @@ void loop() {
   unsigned long currentMillis = 0;
   uint16_t RangingData;
 
+  client.loop();
 
   // If reset connection is lost reset after 20sec.
   //------
@@ -1075,6 +1080,8 @@ void loop() {
 
   zone++;
   zone = zone%2;
+
+  client.loop();
   //------
   //------
 
@@ -1119,11 +1126,11 @@ void loop() {
   // Report distance and people counter on Serial port every 200ms
   currentMillis = millis();
   if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
-    Serial.print("mqttDistance1: ");
-    Serial.println(mqttDistance1);
+    //Serial.print("mqttDistance1: ");
+    //Serial.println(mqttDistance1);
 
-    Serial.print("mqttDistance2: ");
-    Serial.println(mqttDistance2);
+    //Serial.print("mqttDistance2: ");
+    //Serial.println(mqttDistance2);
 
     Serial.print("People counter: ");
     Serial.println(peopleCounterVar);
