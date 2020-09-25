@@ -1061,7 +1061,9 @@ void loop() {
   //------
   RangingData = vl531Init(zone);
 
+  client.loop();
   computeStandardDev(RangingData);
+  client.loop();
 
   peopleCounterVarPrev = peopleCounterVar;
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
@@ -1119,7 +1121,7 @@ void loop() {
 
     measPreviousMillisRanging =  millis();
   }
-
+  client.loop();
   //------
   //------
 
