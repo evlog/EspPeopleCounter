@@ -85,6 +85,9 @@ char mqttRestoreSensorConfigTopic[150];
 const char* MQTT_DEVIATION_DATA_TOPIC = "deviation/data";
 char mqttDeviationDataTopic[150];
 
+const char* MQTT_WIFI_MANAGER_ENABLE_TOPIC = "wifiManagerEnable";
+char mqttWifiManagerEnableTopic[150];
+
 const char* MQTT_DUMMY_TOPIC = "dummy";
 char mqttDummyTopic[150];
 
@@ -93,6 +96,11 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
+
+const char* WIFI_SSID    = "Redmi";
+const char* WIFI_PASSWORD = "spartan3";
+
+int WIFI_MANAGER_ENABLE = 0;
 //------
 //------
 

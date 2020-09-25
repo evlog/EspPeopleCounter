@@ -108,6 +108,8 @@ void mqttForceInitConfig() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   SD_DEVIATION_THRESHOLD = 5;
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
+  WIFI_MANAGER_ENABLE = 0;
+  intToEeprom(WIFI_MANAGER_ENABLE, 79);
 }
 // -----
 // -----
@@ -133,6 +135,7 @@ void initEepromConfigWrite() {
   intToEeprom(ROI_width, 61);
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
+  intToEeprom(WIFI_MANAGER_ENABLE, 79);
 }
 // -----
 // -----
@@ -278,6 +281,9 @@ void restoreEppromConfig() {
   SD_DEVIATION_THRESHOLD = EepromToInt(73); 
   Serial.print("SD_DEVIATION_THRESHOLD:");
   Serial.println(SD_DEVIATION_THRESHOLD);
+  WIFI_MANAGER_ENABLE = EepromToInt(79); 
+  Serial.print("WIFI_MANAGER_ENABLE:");
+  Serial.println(WIFI_MANAGER_ENABLE);
 }
 // -----
 // -----
@@ -631,6 +637,29 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(SD_DEVIATION_THRESHOLD);
     }
   }
+  else if (topic_str == mqttWifiManagerEnableTopic) {
+    if (isValidNumber(message)) {
+      if ((message.toInt() == 1) | (message.toInt() == 0)) {   
+        client.publish(mqttWifiManagerEnableTopic, "OK");
+        if (DEBUG) { 
+          Serial.print("mqttWifiManagerEnableTopic -> ");
+          Serial.println(message.toInt());
+           if (message.toInt() == 1) {
+            Serial.println("WiFi manager enabled");
+            WIFI_MANAGER_ENABLE = 1;
+            intToEeprom(WIFI_MANAGER_ENABLE, 79);
+            wifiManager.resetSettings();
+            ESP.restart();
+           }
+           else if (message.toInt() == 0) {
+            Serial.println("WiFi manager disabled");     
+            WIFI_MANAGER_ENABLE = 0;
+            intToEeprom(WIFI_MANAGER_ENABLE, 79);
+           }     
+        }
+      }
+    }
+  }
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -694,6 +723,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
           temp_str.concat("|\nSD_DEVIATION_THRESHOLD: ");
           temp_str.concat(SD_DEVIATION_THRESHOLD);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nWIFI_MANAGER_ENABLE: ");
+          temp_str.concat(WIFI_MANAGER_ENABLE);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println(temp_str);
@@ -756,6 +791,8 @@ void topicSubscribe() {
     client.subscribe(mqttRestoreSensorConfigTopic); 
     Serial.println(mqttDeviationDataTopic); 
     client.subscribe(mqttDeviationDataTopic); 
+    Serial.println(mqttWifiManagerEnableTopic); 
+    client.subscribe(mqttWifiManagerEnableTopic); 
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -927,29 +964,69 @@ void setup() {
   Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
-  // AP WiFi manager setup
-  //---
-  wifiManager.autoConnect("WifiManager"); // Initial name of the Thing. Used e.g. as SSID of the own Access Point.
+  // Initialize EPPROM memory
+  EEPROM.begin(512);
+
+  // Initialize measurements array
+  for (i = 0; i < measArrSize; i++)
+    measArr[i] = 0;
+
+
+  
+  //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
+  if (EEPROM.read(0) != 4) {
+    Serial.println("Virgin boot");
+    EEPROM.write(eeprom_addr, 4);
+    EEPROM.commit();
+
+    initEepromConfigWrite();
+  }
+  else {
+    restoreEppromConfig();
+  }
+
+  Serial.println("WIFI_MANAGER_ENABLE:");
+  Serial.println(WIFI_MANAGER_ENABLE);
+
+  // Try to connect on fixed WiFi SSID and if not start the wifiManager
+  if (WIFI_MANAGER_ENABLE == 0) {
+    Serial.print("Connecting to ");
+    Serial.println(WIFI_SSID);
+  
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  
+    int wifiCounter = 0;
+    Serial.print("Wait for WiFi fixed SSID...");
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+      wifiCounter++;
+      if (wifiCounter == 30) {
+        Serial.print("Failed to connect to fixed SSID. Restarting.");
+        ESP.restart();
+        break;
+      }
+    }
+  }
   //---
   //---
 
-  // Check status of WiFi connection and enable the AP WiFi manager page if needed
-  // -----
-  while(1) {    
-    // Try to connect to wifi
-    //connect_to_wifi_manager();
-    //if (!iotWebConf.checkWifiConnection()) {
-    if (WiFi.status() != WL_CONNECTED) {
-     Serial.print("Reconnecting to WiFi...\n");
-     delay(1000);
-    }
-    else {
-      Serial.println("WiFi connected\n");
-      Serial.println(WiFi.localIP());
-      break;
-      delay(1000);
-    }
+
+  else if (WIFI_MANAGER_ENABLE == 1) {
+  // Enable the AP WiFi manager page if needed
+  //---
+  if (WiFi.status() != WL_CONNECTED) 
+    wifiManager.autoConnect("WifiManager"); // Initial name of the Thing. Used e.g. as SSID of the own Access Point.
   }
+  //---
+  //---
+  
+
+  // Check status of WiFi connection and 
+  // -----
+  Serial.println("WiFi Connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
   // -----
   // -----  
 
@@ -984,6 +1061,7 @@ void setup() {
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
   sprintf(mqttDeviationDataTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_DATA_TOPIC);
+  sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
@@ -994,33 +1072,6 @@ void setup() {
   mqttReconnect();
   //------
   //------
-
-  // Initialize EPPROM memory
-  EEPROM.begin(512);
-
-  // Initialize measurements array
-  for (i = 0; i < measArrSize; i++)
-    measArr[i] = 0;
-
-
-  
-  //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
-  if (EEPROM.read(0) != 15) {
-    Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 5);
-    EEPROM.commit();
-
-    initEepromConfigWrite();
-  }
-  else {
-    restoreEppromConfig();
-  }
-
-  //measArr[0] = 5;
-  //measArr[1] = 8;
-  //measArr[2] = 10;
-  
-
 
 
 
