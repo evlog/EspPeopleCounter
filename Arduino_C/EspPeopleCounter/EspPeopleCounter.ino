@@ -64,8 +64,8 @@ float computeStandardDev (uint32_t newMeas) {
 
   dev = sqrt((1.0/(float)(SD_NUM_OF_SAMPLES - 1)) * temp);
 
-  Serial.println("Average:");
-  Serial.println(mean);
+  //Serial.println("Average:");
+  //Serial.println(mean);
 
   Serial.println("Deviation:");
   Serial.println(dev);
@@ -1134,8 +1134,8 @@ void loop() {
     //Serial.print("mqttDistance2: ");
     //Serial.println(mqttDistance2);
 
-    Serial.print("People counter: ");
-    Serial.println(peopleCounterVar);
+    //Serial.print("People counter: ");
+    //Serial.println(peopleCounterVar);
 
     measPreviousMillisDataSerialReport = millis();
   }
