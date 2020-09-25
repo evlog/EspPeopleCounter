@@ -38,6 +38,44 @@ void randomMqttClientName() {
 // ----- 
 // -----
 
+// Function to compute standard deviation on sensor samples
+// -----
+float computeStandardDev (uint32_t newMeas) {
+  uint16_t i;
+  uint32_t sum = 0;
+  float mean = 0;
+  float dev = 0;
+  float temp = 0; 
+
+  for (i = (measArrSize - 1); i >= 1; i--)
+    measArr[i] = measArr[i-1];
+
+  measArr[0] = newMeas;
+
+  for (i = 0; i < SD_NUM_OF_SAMPLES; i++) {
+    sum += measArr[i];
+    Serial.println(measArr[i]);
+  }
+
+  mean = (float)sum / (float)SD_NUM_OF_SAMPLES;
+
+  for (i = 0; i < SD_NUM_OF_SAMPLES; i++)
+    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
+
+  dev = sqrt((1.0/(float)(SD_NUM_OF_SAMPLES - 1)) * temp);
+
+  Serial.println("Average:");
+  Serial.println(mean);
+
+  Serial.println("Deviation:");
+  Serial.println(dev);
+
+  return dev;
+}
+
+// ----- 
+// -----
+
 // Function to read EEPROM and initialize config. parameter
 // -----
 void mqttForceInitConfig() {
@@ -66,6 +104,10 @@ void mqttForceInitConfig() {
   intToEeprom(ROI_height, 55);
   ROI_width = 5;
   intToEeprom(ROI_width, 61);
+  SD_NUM_OF_SAMPLES = 10;
+  intToEeprom(SD_NUM_OF_SAMPLES, 67);
+  SD_DEVIATION_THRESHOLD = 5;
+  intToEeprom(SD_DEVIATION_THRESHOLD, 73);
 }
 // -----
 // -----
@@ -89,6 +131,8 @@ void initEepromConfigWrite() {
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
   intToEeprom(ROI_height, 55);
   intToEeprom(ROI_width, 61);
+  intToEeprom(SD_NUM_OF_SAMPLES, 67);
+  intToEeprom(SD_DEVIATION_THRESHOLD, 73);
 }
 // -----
 // -----
@@ -228,6 +272,12 @@ void restoreEppromConfig() {
   ROI_width = EepromToInt(61); 
   Serial.print("ROI_width:");
   Serial.println(ROI_width); 
+  SD_NUM_OF_SAMPLES = EepromToInt(67); 
+  Serial.print("SD_NUM_OF_SAMPLES:");
+  Serial.println(SD_NUM_OF_SAMPLES); 
+  SD_DEVIATION_THRESHOLD = EepromToInt(73); 
+  Serial.print("SD_DEVIATION_THRESHOLD:");
+  Serial.println(SD_DEVIATION_THRESHOLD);
 }
 // -----
 // -----
@@ -550,6 +600,37 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+  else if (topic_str == mqttDeviationDataTopic) {
+    if (message.length() > 2) {
+      String deviationData = message;
+      String t2, t3;
+      StringSplitter *splitterTh = new StringSplitter(deviationData, ',', 2);
+
+      //Read threshold
+      t2 = splitterTh->getItemAtIndex(0);
+      t3 = splitterTh->getItemAtIndex(1);
+
+
+      if ((t2.toInt() != 0) && (t3.toInt() != 0)) {
+        if ((t2.toInt() < 5) | (t2.toInt()) > measArrSize | (t3.toInt() < 1)) {
+          Serial.print(mqttDeviationDataTopic);
+          Serial.println("->ERROR");
+          client.publish(mqttDeviationDataTopic, "ERROR");
+        }
+        else {
+          Serial.print(mqttDeviationDataTopic);
+          Serial.println("->OK");
+          SD_NUM_OF_SAMPLES = t2.toInt();
+          intToEeprom(SD_NUM_OF_SAMPLES, 67);
+          SD_DEVIATION_THRESHOLD = t3.toInt();
+          intToEeprom(SD_DEVIATION_THRESHOLD, 73);
+          client.publish(mqttDeviationDataTopic, "OK");
+        }
+      }
+      Serial.println(SD_NUM_OF_SAMPLES);
+      Serial.println(SD_DEVIATION_THRESHOLD);
+    }
+  }
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -601,6 +682,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
           temp_str.concat("|\nPEOPLE_COUNTER_PERIOD_MS: ");
           temp_str.concat(PEOPLE_COUNTER_PERIOD_MS);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nSD_NUM_OF_SAMPLES: ");
+          temp_str.concat(SD_NUM_OF_SAMPLES);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nSD_DEVIATION_THRESHOLD: ");
+          temp_str.concat(SD_DEVIATION_THRESHOLD);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println(temp_str);
@@ -661,6 +754,8 @@ void topicSubscribe() {
     client.subscribe(mqttGetSensorConfigTopic); 
     Serial.println(mqttRestoreSensorConfigTopic); 
     client.subscribe(mqttRestoreSensorConfigTopic); 
+    Serial.println(mqttDeviationDataTopic); 
+    client.subscribe(mqttDeviationDataTopic); 
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -888,6 +983,7 @@ void setup() {
   sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
+  sprintf(mqttDeviationDataTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_DATA_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
@@ -906,79 +1002,10 @@ void setup() {
   for (i = 0; i < measArrSize; i++)
     measArr[i] = 0;
 
-  // Testt
-  measArr[0] = 3;
-  measArr[1] = 5;
-  measArr[2] = 8;
 
-  uint16_t arrSize = 3;
-  uint32_t sum = 0;
-  float mean;
-  float dev = 0;
-  float temp = 0;
-
-
-  for (i = 0; i < arrSize; i++) {
-    sum += measArr[i];
-    Serial.println(measArr[i]);
-  }
-  
-
-  mean = (float)sum / (float)arrSize;
-
-  for (i = 0; i < arrSize; i++)
-    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
-
-
-  Serial.println("Temp:");
-  Serial.println(temp);
-
-  dev = sqrt((1.0/(float)(arrSize - 1)) * temp);
-
-  Serial.println("Average:");
-  Serial.println(mean);
-
-  Serial.println("Deviation:");
-  Serial.println(dev);
-  
-
-  for (i = (measArrSize - 1); i >= 1; i--)
-    measArr[i] = measArr[i-1];
-
-  measArr[0] = 10;
-
-  sum = 0;
-  dev = 0;
-  temp = 0;
-
-  for (i = 0; i < arrSize; i++) {
-    sum += measArr[i];
-    Serial.println(measArr[i]);
-  }
-  
-
-  mean = (float)sum / (float)arrSize;
-
-  for (i = 0; i < arrSize; i++)
-    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
-
-
-  Serial.println("Temp:");
-  Serial.println(temp);
-
-  dev = sqrt((1.0/(float)(arrSize - 1)) * temp);
-
-  Serial.println("Average:");
-  Serial.println(mean);
-
-  Serial.println("Deviation:");
-  Serial.println(dev);
-
-
-  //
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
-  if (EEPROM.read(0) != 5) {
+  if (EEPROM.read(0) != 15) {
     Serial.println("Virgin boot");
     EEPROM.write(eeprom_addr, 5);
     EEPROM.commit();
@@ -1028,6 +1055,8 @@ void loop() {
   // inject the new ranged distance in the people counting algorithm
   //------
   RangingData = vl531Init(zone);
+
+  computeStandardDev(RangingData);
 
   peopleCounterVarPrev = peopleCounterVar;
   peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);

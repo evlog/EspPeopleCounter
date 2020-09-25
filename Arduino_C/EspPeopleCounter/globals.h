@@ -82,6 +82,9 @@ char mqttGetSensorConfigTopic[150];
 const char* MQTT_RESTORE_SENSOR_CONFIG_TOPIC = "restoreSensorConfig";
 char mqttRestoreSensorConfigTopic[150];
 
+const char* MQTT_DEVIATION_DATA_TOPIC = "deviation/data";
+char mqttDeviationDataTopic[150];
+
 const char* MQTT_DUMMY_TOPIC = "dummy";
 char mqttDummyTopic[150];
 
@@ -141,5 +144,9 @@ static int PplCounter = 0;
 
 static int ROI_height = 5;
 static int ROI_width = 5;
+
+// Standard deviation parameters
+uint32_t SD_NUM_OF_SAMPLES = 10;
+uint32_t SD_DEVIATION_THRESHOLD = 5;
 // -----
 // -----
