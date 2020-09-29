@@ -791,6 +791,10 @@ void topicSubscribe() {
     client.subscribe(mqttRestoreSensorConfigTopic); 
     Serial.println(mqttDeviationDataTopic); 
     client.subscribe(mqttDeviationDataTopic); 
+    Serial.println(mqttDeviationValueHighTopic); 
+    client.subscribe(mqttDeviationValueHighTopic);
+    Serial.println(mqttDeviationValueLowTopic); 
+    client.subscribe(mqttDeviationValueLowTopic);
     Serial.println(mqttWifiManagerEnableTopic); 
     client.subscribe(mqttWifiManagerEnableTopic); 
     //Serial.println(mqttDummyTopic); 
@@ -1062,6 +1066,8 @@ void setup() {
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
   sprintf(mqttDeviationDataTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_DATA_TOPIC);
+  sprintf(mqttDeviationValueHighTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_HIGH_TOPIC);
+  sprintf(mqttDeviationValueLowTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_LOW_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
@@ -1074,8 +1080,6 @@ void setup() {
   //------
   //------
 
-
-
 }
 
 void loop() {
@@ -1086,6 +1090,8 @@ void loop() {
   String temp_str;
   unsigned long currentMillis = 0;
   uint16_t RangingData;
+  float standardDev;
+
 
   client.loop();
 
@@ -1114,7 +1120,41 @@ void loop() {
   RangingData = vl531Init(zone);
 
   client.loop();
-  computeStandardDev(RangingData);
+  
+  // Standard deviation calculation and checks
+  //------
+  standardDev = computeStandardDev(RangingData);
+  if (standardDev > ((float)SD_DEVIATION_THRESHOLD + 0.2)) {
+    deviationHighFlagPrev = deviationHighFlag;
+    deviationHighFlag = true;
+    if ((deviationHighFlagPrev == false) && (deviationHighFlagPrev == true)) {
+      Serial.println("Standard deviation HIGH: ");
+      Serial.println(standardDev);
+
+      temp_str = String(standardDev);      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+      client.publish(mqttDeviationValueHighTopic, temp);       
+    }
+  }
+  else
+    deviationHighFlag = false;
+  
+  if (standardDev < ((float)SD_DEVIATION_THRESHOLD - 0.2)) {
+    deviationLowFlagPrev = deviationLowFlag;
+    deviationLowFlag = true;
+    if ((deviationLowFlagPrev == false) && (deviationLowFlagPrev == true)) {
+      Serial.println("Standard deviation LOW: ");
+      Serial.println(standardDev);
+
+      temp_str = String(standardDev);      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+      client.publish(mqttDeviationValueLowTopic, temp);       
+    }
+  }
+  else
+    deviationLowFlag = false;
+
+    
   client.loop();
 
   peopleCounterVarPrev = peopleCounterVar;
@@ -1177,7 +1217,35 @@ void loop() {
   //------
   //------
 
+
+  // Report deviation alert flag and value every 2min
+  //-----
+  currentMillis = millis();
+  if ((currentMillis - measPreviousMillisDeviationAlert) >=  DEVIATION_COUNTER_PERIOD_MS) {
+    if (deviationLowFlag) {
+      Serial.println("Standard deviation LOW: ");
+      Serial.println(standardDev);
+      
+      temp_str = String(standardDev);      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+      client.publish(mqttDeviationValueLowTopic, temp); 
+    }
+
+    if (deviationHighFlag) {
+      Serial.println("Standard deviation HIGH: ");
+      Serial.println(standardDev);
+
+      temp_str = String(standardDev);      
+      temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
+      client.publish(mqttDeviationValueHighTopic, temp); 
+    }
+    measPreviousMillisDeviationAlert = millis();
+  }
+  //------
+  //------
+  
   // Report distance and people counter on Serial port every 200ms
+  //-----
   currentMillis = millis();
   if ((currentMillis - measPreviousMillisDataSerialReport) >=  200) {
     //Serial.print("mqttDistance1: ");

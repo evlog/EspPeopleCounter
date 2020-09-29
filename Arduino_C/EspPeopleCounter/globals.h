@@ -5,6 +5,7 @@ int eeprom_addr = 0;
 unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisPeople = 0;
 unsigned long measPreviousMillisDataSerialReport = 0;
+unsigned long measPreviousMillisDeviationAlert = 0;
 
 uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;
@@ -92,6 +93,12 @@ char mqttRestoreSensorConfigTopic[150];
 const char* MQTT_DEVIATION_DATA_TOPIC = "deviation/data";
 char mqttDeviationDataTopic[150];
 
+const char* MQTT_DEVIATION_VALUE_HIGH_TOPIC = "deviation/value/high";
+char mqttDeviationValueHighTopic[150];
+
+const char* MQTT_DEVIATION_VALUE_LOW_TOPIC = "deviation/value/low";
+char mqttDeviationValueLowTopic[150];
+
 const char* MQTT_WIFI_MANAGER_ENABLE_TOPIC = "wifiManagerEnable";
 char mqttWifiManagerEnableTopic[150];
 
@@ -104,8 +111,8 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-const char* WIFI_SSID    = "Redmi";
-const char* WIFI_PASSWORD = "spartan3";
+const char* WIFI_SSID    = "ubx";
+const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
 
 // Mark config
 //const char* WIFI_SSID    = "Phil UB";
@@ -126,6 +133,9 @@ uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
 
 // Define in ms how often to send people counter data over MQTT 
 uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
+
+// Define in ms how often to send deviation alert report
+uint32_t DEVIATION_COUNTER_PERIOD_MS = 120000; //default is 2min. 
 
 // Define in mm the people counter distance measurement threshold
 uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
@@ -167,5 +177,9 @@ static int ROI_width = 5;
 // Standard deviation parameters
 uint32_t SD_NUM_OF_SAMPLES = 10;
 uint32_t SD_DEVIATION_THRESHOLD = 5;
+bool deviationLowFlagPrev = false;
+bool deviationHighFlagPrev = false;
+bool deviationLowFlag = false;
+bool deviationHighFlag = false;
 // -----
 // -----
