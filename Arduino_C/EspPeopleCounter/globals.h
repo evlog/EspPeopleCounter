@@ -37,6 +37,13 @@ const char* MQTT_PASSWORD = "rjaxtarmas1";
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
 const char* MQTT_ADDRESS = "evlog.zapto.org";
 
+// Mark config
+//const char* MQTT_USERNAME = "switchfi";
+//const char* MQTT_PASSWORD = "M@rkmj1989"; 
+
+//const char* MQTT_CLIENT = "testClien";  // *** Must be unique
+//const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
+
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
 
@@ -99,6 +106,10 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
 const char* WIFI_SSID    = "Redmi";
 const char* WIFI_PASSWORD = "spartan3";
+
+// Mark config
+//const char* WIFI_SSID    = "Phil UB";
+//const char* WIFI_PASSWORD = "12312C64400151";
 
 int WIFI_MANAGER_ENABLE = 0;
 //------
