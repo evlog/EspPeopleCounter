@@ -400,7 +400,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   p[length] = NULL;
   String message(p);
   String topic_str(topic);
-  char temp[200];
+  char temp[300];
   String temp_str;
   uint32_t tmp_int;
 
@@ -961,7 +961,7 @@ void setup() {
   Serial.println(MAC_ADDRESS);
 
 
-  Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
+  Wire.begin(D5,D6); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
   // Initialize EPPROM memory
@@ -1042,6 +1042,7 @@ void setup() {
 
   // Connect to MQTT broker and subscribe to topics 
   //------
+  client.setBufferSize(512); // Set buffer size to 512bytes to handle the getConfig command payload
   client.setCallback(mqttCallback);
 
   // Define MQTT topic names
