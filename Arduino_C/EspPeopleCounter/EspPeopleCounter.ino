@@ -108,7 +108,7 @@ void mqttForceInitConfig() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   SD_DEVIATION_THRESHOLD = 5;
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
-  WIFI_MANAGER_ENABLE = 0;
+  WIFI_MANAGER_ENABLE = 1; 
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
 }
 // -----

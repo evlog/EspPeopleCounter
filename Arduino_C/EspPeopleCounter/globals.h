@@ -118,7 +118,7 @@ const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
 //const char* WIFI_SSID    = "Phil UB";
 //const char* WIFI_PASSWORD = "12312C64400151";
 
-int WIFI_MANAGER_ENABLE = 0;
+int WIFI_MANAGER_ENABLE = 1;
 //------
 //------
 
