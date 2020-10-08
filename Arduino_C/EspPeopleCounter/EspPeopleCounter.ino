@@ -992,6 +992,8 @@ void setup() {
   Serial.println("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
 
+  WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
   if (WIFI_MANAGER_ENABLE == 0) {
     Serial.print("Connecting to ");
