@@ -992,13 +992,21 @@ void setup() {
   Serial.println("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
 
-  WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  if (WiFi.setPhyMode(WIFI_PHY_MODE_11N))
+    Serial.println("setPhyMode success");
+  else
+    Serial.println("setPhyMode failed");
+  WiFi.setOutputPower(16.4);
+
+  int x = 0;
 
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
-  if (WIFI_MANAGER_ENABLE == 0) {
+  if (x == 0) {
     Serial.print("Connecting to ");
     Serial.println(WIFI_SSID);
-  
+
+    WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+    WiFi.setOutputPower(16.4);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
     int wifiCounter = 0;
@@ -1081,6 +1089,9 @@ void setup() {
   mqttReconnect();
   //------
   //------
+
+  Serial.print("Phy mode:");
+  Serial.println(WiFi.getPhyMode());
 
 }
 
