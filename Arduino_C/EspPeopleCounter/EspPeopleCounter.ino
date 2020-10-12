@@ -471,6 +471,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ESP.restart();
     }
   }
+  else if (topic_str == mqttSensorResetTopic) {
+    if (message == "true") {
+      client.publish(mqttSensorResetTopic, "OK");
+      if (DEBUG) Serial.println("mqttSensorResetTopic -> true");
+      delay(1000);
+      ESP.reset();
+    }
+  }
   else if (topic_str == mqttMeasurementBudgetTopic) {
     if (isValidNumber(message)) {
       if ((message.toInt() != 15) && (message.toInt() != 20) && (message.toInt() != 33) && (message.toInt() != 50) && (message.toInt() != 100) && (message.toInt() != 200) && (message.toInt() != 500)) {     
@@ -649,7 +657,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             WIFI_MANAGER_ENABLE = 1;
             intToEeprom(WIFI_MANAGER_ENABLE, 79);
             wifiManager.resetSettings();
-            ESP.restart();
+            ESP.reset();
            }
            else if (message.toInt() == 0) {
             Serial.println("WiFi manager disabled");     
@@ -769,6 +777,8 @@ void topicSubscribe() {
     client.subscribe(mqttPeopleCountTopic); 
     Serial.println(mqttSensorRebootTopic);    
     client.subscribe(mqttSensorRebootTopic);
+    Serial.println(mqttSensorResetTopic);    
+    client.subscribe(mqttSensorResetTopic);
     Serial.println(mqttMeasurementBudgetTopic);
     client.subscribe(mqttMeasurementBudgetTopic);
     Serial.println(mqttMeasurementPeriodTopic);
@@ -845,7 +855,7 @@ void mqttReconnect() {
       delay(5000);
     }
     if (counter == 5) { // reboot and reconnectr to wifi if MQTT connection is not possible
-      ESP.restart();
+      ESP.reset();
     }
   }
 }
@@ -960,6 +970,7 @@ void setup() {
   
   // put your setup code here, to run once:
   Serial.begin (115200);  
+  delay(500);
   Serial.println("Serial comm established");
   Serial.print("Sensor MAC address: ");
   Serial.println(MAC_ADDRESS);
@@ -996,7 +1007,7 @@ void setup() {
     Serial.println("setPhyMode success");
   else
     Serial.println("setPhyMode failed");
-  WiFi.setOutputPower(16.4);
+  WiFi.setOutputPower(20.5);
 
   int x = 0;
 
@@ -1006,7 +1017,7 @@ void setup() {
     Serial.println(WIFI_SSID);
 
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-    WiFi.setOutputPower(16.4);
+    WiFi.setOutputPower(20.5);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
     int wifiCounter = 0;
@@ -1015,9 +1026,9 @@ void setup() {
       delay(500);
       Serial.print(".");
       wifiCounter++;
-      if (wifiCounter == 30) {
+      if (wifiCounter == 40) {
         Serial.print("Failed to connect to fixed SSID. Restarting.");
-        ESP.restart();
+        ESP.reset();
         break;
       }
     }
@@ -1065,6 +1076,7 @@ void setup() {
   sprintf(mqttPeopleCountThresholdTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC);
   sprintf(mqttPeopleCountTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_TOPIC);
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
+  sprintf(mqttSensorResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_RESET_TOPIC);
   sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
   sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
   sprintf(mqttRoiConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG_TOPIC); 
@@ -1114,7 +1126,7 @@ void loop() {
     delay(20000);
 
     if (WiFi.status() != WL_CONNECTED)
-      ESP.restart();
+      ESP.reset();
   }
   //------
   //------

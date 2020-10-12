@@ -60,6 +60,9 @@ char mqttPeopleCountTopic[150];
 const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";
 char mqttSensorRebootTopic[150];
 
+const char* MQTT_SENSOR_RESET_TOPIC = "reset";
+char mqttSensorResetTopic[150];
+
 const char* MQTT_MEASUREMENT_BUDGET_TOPIC = "measurementBudget";
 char mqttMeasurementBudgetTopic[150];
 
