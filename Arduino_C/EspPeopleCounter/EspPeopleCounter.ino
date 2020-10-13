@@ -1015,7 +1015,9 @@ void setup() {
   if (x == 0) {
     Serial.print("Connecting to ");
     Serial.println(WIFI_SSID);
-
+    WiFi.disconnect(true);
+    ESP.eraseConfig();
+    delay(2000);
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
     WiFi.setOutputPower(20.5);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
