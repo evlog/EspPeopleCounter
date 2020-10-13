@@ -1020,6 +1020,8 @@ void setup() {
     delay(2000);
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
     WiFi.setOutputPower(20.5);
+    WiFi.mode(WIFI_STA);
+    delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
     int wifiCounter = 0;
