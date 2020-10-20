@@ -976,7 +976,7 @@ void setup() {
   Serial.println(MAC_ADDRESS);
 
 
-  Wire.begin(D5,D6); // Define here I2C pins, e.g. Wire.begin(3,4);
+  Wire.begin(); // Define here I2C pins, e.g. Wire.begin(3,4);
   Wire.setClock(400000);
 
   // Initialize EPPROM memory
