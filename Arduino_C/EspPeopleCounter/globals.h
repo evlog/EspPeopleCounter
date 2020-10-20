@@ -15,7 +15,7 @@ int zone = 0;
 uint16_t mqttDistance1, mqttDistance2;
 
 // Define the path of the binary file for flash update
-String UPDATE_BINARY_FILE_PATH = "http://evlog.zapto.org/subs/figures/test.bin";
+String UPDATE_BINARY_FILE_PATH = "http://update.switchfi.co.za/firmware/counterd2d1.bin";
 
 // Array to hold measurements for the standard deviation calculation
 const int measArrSize = 500;
@@ -32,18 +32,18 @@ WiFiManager wifiManager;
 //------
 String MAC_ADDRESS = WiFi.macAddress(); 
 
-const char* MQTT_USERNAME = "pi";
-const char* MQTT_PASSWORD = "rjaxtarmas1"; 
-
-const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "evlog.zapto.org";
-
-// Mark config
-//const char* MQTT_USERNAME = "switchfi";
-//const char* MQTT_PASSWORD = "M@rkmj1989"; 
+//const char* MQTT_USERNAME = "pi";
+//const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 //const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-//const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
+//const char* MQTT_ADDRESS = "evlog.zapto.org";
+
+// Mark config
+const char* MQTT_USERNAME = "switchfi";
+const char* MQTT_PASSWORD = "M@rkmj1989"; 
+
+const char* MQTT_CLIENT = "testClien";  // *** Must be unique
+const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
@@ -114,12 +114,12 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-const char* WIFI_SSID    = "ubx";
-const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
+//const char* WIFI_SSID    = "ubx";
+//const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
 
 // Mark config
-//const char* WIFI_SSID    = "Phil UB";
-//const char* WIFI_PASSWORD = "12312C64400151";
+const char* WIFI_SSID    = "Netflix";
+const char* WIFI_PASSWORD = "";
 
 int WIFI_MANAGER_ENABLE = 1;
 //------
@@ -129,7 +129,7 @@ int WIFI_MANAGER_ENABLE = 1;
 // -----
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-uint32_t  MEASUREMENT_BUDGET_MS = 50;
+uint32_t  MEASUREMENT_BUDGET_MS = 15;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
 uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
@@ -143,7 +143,7 @@ uint32_t DEVIATION_COUNTER_PERIOD_MS = 120000; //default is 2min.
 // Define in mm the people counter distance measurement threshold
 uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
 
-uint32_t INTER_MEASUREMENT_PERIOD_MS = 55;
+uint32_t INTER_MEASUREMENT_PERIOD_MS = 100;
 
 // Define distance metering mode of the sensor (short or long, default is long)
 String  VL53L1_DISTANCE_MODE = "long";
@@ -170,12 +170,12 @@ static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
 // Define ROI config1
-static int center[2] = {239,175}; /* center of the two zones */  
+static int center[2] = {231,167}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
 
-static int ROI_height = 5;
-static int ROI_width = 5;
+static int ROI_height = 6;
+static int ROI_width = 13;
 
 // Standard deviation parameters
 uint32_t SD_NUM_OF_SAMPLES = 10;
