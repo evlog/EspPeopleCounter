@@ -1024,6 +1024,7 @@ void setup() {
     WiFi.enableAP(false);
     WiFi.mode(WIFI_STA);
     wifi_set_sleep_type(NONE_SLEEP_T);
+    WiFi.setSleepMode(WIFI_NONE_SLEEP);
     delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
@@ -1041,7 +1042,7 @@ void setup() {
       }
     }
 
-    if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) {sle
       wifiCounter = 0;
       WiFi.setPhyMode(WIFI_PHY_MODE_11N);
       Serial.println("Wait for WiFi fixed SSID 11N...");
