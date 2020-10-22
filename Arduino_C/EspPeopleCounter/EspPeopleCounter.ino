@@ -1023,6 +1023,7 @@ void setup() {
     WiFi.softAPdisconnect(false);
     WiFi.enableAP(false);
     WiFi.mode(WIFI_STA);
+    wifi_set_sleep_type(NONE_SLEEP_T);
     delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
