@@ -11,6 +11,7 @@
 //#include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include <EEPROM.h>
+#include "ESP8266Ping.h"
 #include "globals.h"
 // ----- 
 // -----
@@ -1117,6 +1118,20 @@ void setup() {
   sprintf(mqttDeviationValueLowTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_LOW_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
+
+  // Ping Google to check wifi connection
+  //------
+  if(Ping.ping(REMOTE_PING_HOST)) {
+    Serial.println("Ping host success.");
+    Serial.print("Ping average time: " );
+    Serial.print(Ping.averageTime());
+    Serial.println(" ms");
+  } 
+  else {
+    Serial.println("Ping host error.");
+  }
+  //------
+  //------
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 

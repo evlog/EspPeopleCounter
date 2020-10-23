@@ -2,6 +2,8 @@
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 int eeprom_addr = 0;
 
+const char* REMOTE_PING_HOST = "www.google.com";
+
 unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisPeople = 0;
 unsigned long measPreviousMillisDataSerialReport = 0;
