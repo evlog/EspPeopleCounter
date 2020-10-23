@@ -1042,7 +1042,7 @@ void setup() {
       }
     }
 
-    if (WiFi.status() != WL_CONNECTED) {sle
+    if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
       WiFi.setPhyMode(WIFI_PHY_MODE_11N);
       Serial.println("Wait for WiFi fixed SSID 11N...");
