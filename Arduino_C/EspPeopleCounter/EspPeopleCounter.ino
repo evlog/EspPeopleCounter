@@ -1,6 +1,9 @@
 // Define libraries
 // -----
 //#include <DNSServer.h>
+extern "C" {
+#include "user_interface.h"
+}
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT
@@ -1026,6 +1029,7 @@ void setup() {
     WiFi.mode(WIFI_STA);
     wifi_set_sleep_type(NONE_SLEEP_T);
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
+    wifi_set_user_fixed_rate(FIXED_RATE_MASK_ALL, PHY_RATE_54);
     delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
