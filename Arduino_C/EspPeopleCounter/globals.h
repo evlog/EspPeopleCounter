@@ -131,7 +131,7 @@ int WIFI_MANAGER_ENABLE = 1;
 // -----
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-uint32_t  MEASUREMENT_BUDGET_MS = 15;
+uint32_t  MEASUREMENT_BUDGET_MS = 50;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
 uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
@@ -163,7 +163,7 @@ static int SOMEONE = 1;
 static int LEFT = 0;
 static int RIGHT = 1;
 
-uint32_t DIST_THRESHOLD_MAX[] = {1850, 1650};   // treshold of the two zones
+uint32_t DIST_THRESHOLD_MAX[] = {1850, 1850};   // treshold of the two zones
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
@@ -176,8 +176,8 @@ static int center[2] = {231,167}; /* center of the two zones */
 static int Zone = 0;
 static int PplCounter = 0;
 
-static int ROI_height = 6;
-static int ROI_width = 13;
+static int ROI_height = 8;
+static int ROI_width = 8;
 
 // Standard deviation parameters
 uint32_t SD_NUM_OF_SAMPLES = 10;
