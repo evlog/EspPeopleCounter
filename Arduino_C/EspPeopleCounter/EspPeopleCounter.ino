@@ -366,14 +366,8 @@ boolean isValidNumber(String str){
 uint16_t vl531Init(uint8_t zone) {  
   
   uint16_t distance;
-
-  if (distanceSensor.init()) {
-    Serial.println("Sensor initialization success");
-    Serial.print("Sensor ID: ");
-    Serial.println(distanceSensor.getSensorID());
-  }
-  else
-    Serial.println("Sensor initialization failed");
+  
+  if (distanceSensor.init() == false);
 
   distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
