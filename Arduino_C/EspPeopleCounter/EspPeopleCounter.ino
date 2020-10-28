@@ -1023,7 +1023,8 @@ void setup() {
     WiFi.mode(WIFI_STA);
     wifi_set_sleep_type(NONE_SLEEP_T);
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
-    wifi_set_user_fixed_rate(FIXED_RATE_MASK_ALL, PHY_RATE_54);
+    //wifi_set_user_fixed_rate(FIXED_RATE_MASK_ALL, PHY_RATE_54);
+    wifi_set_user_sup_rate(RATE_11N_MCS5, RATE_11N_MCS7);
     delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
