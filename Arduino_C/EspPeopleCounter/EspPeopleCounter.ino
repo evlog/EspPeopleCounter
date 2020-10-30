@@ -1016,7 +1016,8 @@ void setup() {
     WiFi.disconnect(true);
     ESP.eraseConfig();
     delay(2000);
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  wifi_set_phy_mode(PHY_MODE_11N);
     WiFi.setOutputPower(20.5);
     WiFi.softAPdisconnect(false);
     WiFi.enableAP(false);
@@ -1030,22 +1031,24 @@ void setup() {
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
     int wifiCounter = 0;
-    Serial.println("Wait for WiFi fixed SSID 11G...");
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    Serial.println("Wait for WiFi fixed SSID 11N...");
+    //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+  //wifi_set_phy_mode(PHY_MODE_11N);
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
       wifiCounter++;
       if (wifiCounter == 40) {
-        Serial.print("Failed to connect to fixed SSID 11G mode. Trying 11N.");
-        //ESP.reset();
-        break;
+        Serial.print("Failed to connect to fixed SSID 11N mode. Restarting."); 
+        ESP.reset();
+        //break;
       }
     }
 
-    if (WiFi.status() != WL_CONNECTED) {
+    /*if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
-      WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+      //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
+   // wifi_set_phy_mode(PHY_MODE_11N);
       Serial.println("Wait for WiFi fixed SSID 11N...");
       while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -1057,7 +1060,7 @@ void setup() {
           break;
         }
       }
-    }
+    }*/
   }
   //---
   //---
