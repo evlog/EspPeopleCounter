@@ -5,6 +5,7 @@ extern "C" {
 #include "user_interface.h"
 }
 #include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
@@ -1001,11 +1002,11 @@ void setup() {
   Serial.println("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
 
-  if (WiFi.setPhyMode(WIFI_PHY_MODE_11N))
-    Serial.println("setPhyMode success");
-  else
-    Serial.println("setPhyMode failed");
-  WiFi.setOutputPower(20.5);
+  //if (WiFi.setPhyMode(WIFI_PHY_MODE_11N))
+  //  Serial.println("setPhyMode success");
+  //else
+  //  Serial.println("setPhyMode failed");
+  //WiFi.setOutputPower(20.5);
 
   int x = 0;
 
@@ -1018,6 +1019,7 @@ void setup() {
     delay(2000);
     //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   wifi_set_phy_mode(PHY_MODE_11N);
+
     WiFi.setOutputPower(20.5);
     WiFi.softAPdisconnect(false);
     WiFi.enableAP(false);
@@ -1044,6 +1046,8 @@ void setup() {
         //break;
       }
     }
+    Serial.print("WIFI MODE: ");
+    Serial.println(wifi_get_phy_mode() );
 
     /*if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
