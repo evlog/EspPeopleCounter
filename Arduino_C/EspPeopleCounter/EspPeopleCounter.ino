@@ -1,11 +1,11 @@
 // Define libraries
 // -----
 //#include <DNSServer.h>
-extern "C" {
-#include "user_interface.h"
-}
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
+//extern "C" {
+//#include "user_interface.h"
+//}
+//#include <ESP8266WebServer.h>
+//#include <ESP8266WiFi.h>
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
@@ -13,9 +13,9 @@ extern "C" {
 //#include "src/vl53l1x-st-api/vl53l1_api.h"
 #include <SparkFun_VL53L1X.h>
 //#include <ESP8266HTTPClient.h>
-#include <ESP8266httpUpdate.h>
+#include "ESP32HTTPUpdate.h"
 #include <EEPROM.h>
-#include "ESP8266Ping.h"
+//#include "ESP32Ping.h"
 #include "globals.h"
 // ----- 
 // -----
@@ -475,7 +475,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       client.publish(mqttSensorResetTopic, "OK");
       if (DEBUG) Serial.println("mqttSensorResetTopic -> true");
       delay(1000);
-      ESP.reset();
+      ESP.restart();
     }
   }
   else if (topic_str == mqttMeasurementBudgetTopic) {
@@ -656,7 +656,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
             WIFI_MANAGER_ENABLE = 1;
             intToEeprom(WIFI_MANAGER_ENABLE, 79);
             wifiManager.resetSettings();
-            ESP.reset();
+            ESP.restart();
            }
            else if (message.toInt() == 0) {
             Serial.println("WiFi manager disabled");     
@@ -854,7 +854,7 @@ void mqttReconnect() {
       delay(5000);
     }
     if (counter == 5) { // reboot and reconnectr to wifi if MQTT connection is not possible
-      ESP.reset();
+      ESP.restart();
     }
   }
 }
@@ -1014,21 +1014,21 @@ void setup() {
   if (x == 0) {
     Serial.print("Connecting to ");
     Serial.println(WIFI_SSID);
-    WiFi.disconnect(true);
-    ESP.eraseConfig();
+    //WiFi.disconnect(true);
+    //ESP.eraseConfig();
     delay(2000);
     //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-  wifi_set_phy_mode(PHY_MODE_11N);
+  //wifi_set_phy_mode(PHY_MODE_11N);
 
-    WiFi.setOutputPower(20.5);
-    WiFi.softAPdisconnect(false);
-    WiFi.enableAP(false);
-    WiFi.mode(WIFI_STA);
-    wifi_set_sleep_type(NONE_SLEEP_T);
-    WiFi.setSleepMode(WIFI_NONE_SLEEP);
+    //WiFi.setOutputPower(20.5);
+    //WiFi.softAPdisconnect(false);
+    //WiFi.enableAP(false);
+    //WiFi.mode(WIFI_STA);
+    //wifi_set_sleep_type(NONE_SLEEP_T);
+   // WiFi.setSleepMode(WIFI_NONE_SLEEP);
     //wifi_set_user_fixed_rate(FIXED_RATE_MASK_ALL, PHY_RATE_54);
     //wifi_set_user_sup_rate(RATE_11N_MCS5, RATE_11N_MCS7);
-    wifi_set_user_rate_limit(RC_LIMIT_11N,  0,  RATE_11N_MCS7,  RATE_11N_MCS5);
+    //wifi_set_user_rate_limit(RC_LIMIT_11N,  0,  RATE_11N_MCS7,  RATE_11N_MCS5);
     delay(1000);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
@@ -1042,12 +1042,12 @@ void setup() {
       wifiCounter++;
       if (wifiCounter == 40) {
         Serial.print("Failed to connect to fixed SSID 11N mode. Restarting."); 
-        ESP.reset();
+        ESP.restart();
         //break;
       }
     }
-    Serial.print("WIFI MODE: ");
-    Serial.println(wifi_get_phy_mode() );
+    //Serial.print("WIFI MODE: ");
+    //Serial.println(wifi_get_phy_mode() );
 
     /*if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
@@ -1128,7 +1128,7 @@ void setup() {
 
   // Ping Google to check wifi connection
   //------
-  if(Ping.ping(REMOTE_PING_HOST)) {
+  /*if(Ping.ping(REMOTE_PING_HOST)) {
     Serial.println("Ping host success.");
     Serial.print("Ping average time: " );
     Serial.print(Ping.averageTime());
@@ -1136,7 +1136,7 @@ void setup() {
   } 
   else {
     Serial.println("Ping host error.");
-  }
+  }*/
   //------
   //------
 
@@ -1149,8 +1149,8 @@ void setup() {
   //------
   //------
 
-  Serial.print("Phy mode:");
-  Serial.println(WiFi.getPhyMode());
+  //Serial.print("Phy mode:");
+  //Serial.println(WiFi.getPhyMode());
 
 }
 
@@ -1173,7 +1173,7 @@ void loop() {
     delay(20000);
 
     if (WiFi.status() != WL_CONNECTED)
-      ESP.reset();
+      ESP.restart();
   }
   //------
   //------
