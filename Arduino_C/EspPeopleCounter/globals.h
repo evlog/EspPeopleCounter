@@ -32,7 +32,7 @@ WiFiManager wifiManager;
 // MQTT connection parameters
 //*** Replace with your own MQTT username and password 
 //------
-String MAC_ADDRESS = WiFi.macAddress(); 
+String MAC_ADDRESS;
 
 //const char* MQTT_USERNAME = "pi";
 //const char* MQTT_PASSWORD = "rjaxtarmas1"; 

@@ -1,9 +1,9 @@
 // Define libraries
 // -----
 //#include <DNSServer.h>
-//extern "C" {
-//#include "user_interface.h"
-//}
+extern "C" {
+#include "esp_wifi.h"
+}
 //#include <ESP8266WebServer.h>
 //#include <ESP8266WiFi.h>
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
@@ -972,6 +972,9 @@ void setup() {
   delay(500);
   Serial.println("Serial comm established");
   Serial.print("Sensor MAC address: ");
+  WiFi.mode(WIFI_MODE_STA);
+ 
+  MAC_ADDRESS = WiFi.macAddress();
   Serial.println(MAC_ADDRESS);
 
 
@@ -1046,8 +1049,10 @@ void setup() {
         //break;
       }
     }
-    //Serial.print("WIFI MODE: ");
-    //Serial.println(wifi_get_phy_mode() );
+    Serial.print("WIFI MODE: ");
+    uint8_t protocol_bitmap;
+    Serial.println(esp_wifi_get_protocol(ESP_IF_WIFI_STA, &protocol_bitmap));
+    Serial.println(protocol_bitmap);
 
     /*if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
