@@ -141,6 +141,7 @@ void initEepromConfigWrite() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
+  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
 }
 // -----
 // -----
@@ -289,6 +290,9 @@ void restoreEppromConfig() {
   WIFI_MANAGER_ENABLE = EepromToInt(79); 
   Serial.print("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
+  DISTANCES_ARRAY_SIZE = EepromToInt(85); 
+  Serial.print("DISTANCES_ARRAY_SIZE:");
+  Serial.println(DISTANCES_ARRAY_SIZE);
 }
 // -----
 // -----
@@ -519,6 +523,21 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+  else if (topic_str == mqttDistancesArraySizeTopic) {
+    if (isValidNumber(message)) {
+      DISTANCES_ARRAY_SIZE = message.toInt();  
+      intToEeprom(DISTANCES_ARRAY_SIZE, 85);   
+      Serial.print(mqttDistancesArraySizeTopic);
+      Serial.println("->OK");
+      client.publish(mqttDistancesArraySizeTopic, "OK");   
+
+      if (DEBUG) { 
+        Serial.print("mqttDistancesArraySizeTopic -> ");
+        Serial.println(DISTANCES_ARRAY_SIZE);
+      }
+    }
+  }
+  
   else if (topic_str == mqttRoiConfigTopic) {
     if (message.length() > 4) {
       String roiConfig = message;
@@ -730,6 +749,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
           temp_str.concat("|\nSD_DEVIATION_THRESHOLD: ");
           temp_str.concat(SD_DEVIATION_THRESHOLD);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
+          temp_str.concat(DISTANCES_ARRAY_SIZE);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //erial.println(temp_str);
