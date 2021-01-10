@@ -115,6 +115,12 @@ void mqttForceInitConfig() {
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   WIFI_MANAGER_ENABLE = 1; 
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
+  DISTANCES_ARRAY_SIZE = 10;
+  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  MAX_DISTANCE = 0;
+  intToEeprom(MAX_DISTANCE, 91);
+  MIN_DISTANCE = 0;
+  intToEeprom(MIN_DISTANCE, 97);
 }
 // -----
 // -----
@@ -142,6 +148,8 @@ void initEepromConfigWrite() {
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
   intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  intToEeprom(MAX_DISTANCE, 91);
+  intToEeprom(MIN_DISTANCE, 97);
 }
 // -----
 // -----
@@ -293,6 +301,12 @@ void restoreEppromConfig() {
   DISTANCES_ARRAY_SIZE = EepromToInt(85); 
   Serial.print("DISTANCES_ARRAY_SIZE:");
   Serial.println(DISTANCES_ARRAY_SIZE);
+  MAX_DISTANCE = EepromToInt(91); 
+  Serial.print("MAX_DISTANCE:");
+  Serial.println(MAX_DISTANCE);
+  MIN_DISTANCE = EepromToInt(97); 
+  Serial.print("MIN_DISTANCE:");
+  Serial.println(MIN_DISTANCE);
 }
 // -----
 // -----
@@ -537,6 +551,36 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+
+  else if (topic_str == mqttMaxDistanceTopic) {
+    if (isValidNumber(message)) {
+      MAX_DISTANCE = message.toInt();  
+      intToEeprom(MAX_DISTANCE, 91);   
+      Serial.print(mqttMaxDistanceTopic);
+      Serial.println("->OK");
+      client.publish(mqttMaxDistanceTopic, "OK");   
+
+      if (DEBUG) { 
+        Serial.print("mqttMaxDistanceTopic -> ");
+        Serial.println(MAX_DISTANCE);
+      }
+    }
+  }
+
+  else if (topic_str == mqttMinDistanceTopic) {
+    if (isValidNumber(message)) {
+      MIN_DISTANCE = message.toInt();  
+      intToEeprom(MIN_DISTANCE, 97);   
+      Serial.print(mqttMinDistanceTopic);
+      Serial.println("->OK");
+      client.publish(mqttMinDistanceTopic, "OK");   
+
+      if (DEBUG) { 
+        Serial.print("mqttMinDistanceTopic -> ");
+        Serial.println(MIN_DISTANCE);
+      }
+    }
+  }
   
   else if (topic_str == mqttRoiConfigTopic) {
     if (message.length() > 4) {
@@ -755,6 +799,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
           temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
           temp_str.concat(DISTANCES_ARRAY_SIZE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nMAX_DISTANCE: ");
+          temp_str.concat(MAX_DISTANCE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nMIN_DISTANCE: ");
+          temp_str.concat(MIN_DISTANCE);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //erial.println(temp_str);
@@ -1013,9 +1069,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
-  if (EEPROM.read(0) != 4) {
+  if (EEPROM.read(0) != 3) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 4);
+    EEPROM.write(eeprom_addr, 3); 
     EEPROM.commit();
 
     initEepromConfigWrite();
