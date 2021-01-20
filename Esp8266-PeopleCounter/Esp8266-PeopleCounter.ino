@@ -59,7 +59,7 @@ float computeStandardDev (uint32_t newMeas) {
 
   for (i = 0; i < SD_NUM_OF_SAMPLES; i++) {
     sum += measArr[i];
-    Serial.println(measArr[i]);
+    //Serial.println(measArr[i]);
   }
 
   mean = (float)sum / (float)SD_NUM_OF_SAMPLES;
@@ -72,8 +72,8 @@ float computeStandardDev (uint32_t newMeas) {
   //Serial.println("Average:");
   //Serial.println(mean);
 
-  Serial.println("Deviation:");
-  Serial.println(dev);
+  //Serial.println("Deviation:");
+  //Serial.println(dev);
 
   return dev;
 }
@@ -887,6 +887,10 @@ void topicSubscribe() {
     client.subscribe(mqttDeviationValueLowTopic);
     Serial.println(mqttWifiManagerEnableTopic); 
     client.subscribe(mqttWifiManagerEnableTopic); 
+    Serial.println(mqttMinDistanceTopic);
+    client.subscribe(mqttMinDistanceTopic);
+    Serial.println(mqttMaxDistanceTopic);
+    client.subscribe(mqttMaxDistanceTopic);
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -1231,6 +1235,8 @@ void setup() {
   sprintf(mqttDeviationValueHighTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_HIGH_TOPIC);
   sprintf(mqttDeviationValueLowTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_LOW_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
+  sprintf(mqttMinDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MIN_DISTANCE_TOPIC);
+  sprintf(mqttMaxDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MAX_DISTANCE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   // Ping Google to check wifi connection
