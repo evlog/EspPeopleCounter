@@ -141,6 +141,10 @@ void initEepromConfigWrite() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
+  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  //intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  intToEeprom(MAX_DISTANCE, 91);
+  intToEeprom(MIN_DISTANCE, 97);
 }
 // -----
 // -----
@@ -289,6 +293,12 @@ void restoreEppromConfig() {
   WIFI_MANAGER_ENABLE = EepromToInt(79); 
   Serial.print("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
+  //DISTANCES_ARRAY_SIZE = EepromToInt(85); 
+  //Serial.print("DISTANCES_ARRAY_SIZE:");
+  //Serial.println(DISTANCES_ARRAY_SIZE);
+  MAX_DISTANCE = EepromToInt(91); 
+  Serial.print("MAX_DISTANCE:");
+  Serial.println(MAX_DISTANCE);
 }
 // -----
 // -----
@@ -519,6 +529,34 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+  else if (topic_str == mqttMaxDistanceTopic) {
+    if (isValidNumber(message)) {
+      MAX_DISTANCE = message.toInt();  
+      intToEeprom(MAX_DISTANCE, 91);   
+      Serial.print(mqttMaxDistanceTopic);
+      Serial.println("->OK");
+      client.publish(mqttMaxDistanceTopic, "OK");   
+
+      if (DEBUG) { 
+        Serial.print("mqttMaxDistanceTopic -> ");
+        Serial.println(MAX_DISTANCE);
+      }
+    }
+  }
+  else if (topic_str == mqttMinDistanceTopic) {
+    if (isValidNumber(message)) {
+      MIN_DISTANCE = message.toInt();  
+      intToEeprom(MIN_DISTANCE, 97);   
+      Serial.print(mqttMinDistanceTopic);
+      Serial.println("->OK");
+      client.publish(mqttMinDistanceTopic, "OK");   
+
+      if (DEBUG) { 
+        Serial.print("mqttMinDistanceTopic -> ");
+        Serial.println(MIN_DISTANCE);
+      }
+    }
+  }
   else if (topic_str == mqttRoiConfigTopic) {
     if (message.length() > 4) {
       String roiConfig = message;
@@ -667,6 +705,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+  
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -861,10 +900,36 @@ void mqttReconnect() {
 
 uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
 
-    int CurrentZoneStatus = NOBODY;
-    int AllZonesCurrentStatus = 0;
-    int AnEventHasOccured = 0;
-    uint16_t peopleCounterLocal = 0;
+  int CurrentZoneStatus = NOBODY;
+  int AllZonesCurrentStatus = 0;
+  int AnEventHasOccured = 0;
+  uint16_t peopleCounterLocal = 0;
+
+  static uint16_t Distances[2][DISTANCES_ARRAY_SIZE];
+  static uint8_t DistancesTableSize[2] = {0,0};
+  
+  uint16_t MinDistance;
+  uint8_t i;
+
+  // Add just picked distance to the table of the corresponding zone
+  if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+    Distances[zone][DistancesTableSize[zone]] = Distance;
+    DistancesTableSize[zone] ++;
+  }
+  else {
+    for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+      Distances[zone][i-1] = Distances[zone][i];
+    Distances[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+  }
+  
+  // pick up the min distance
+  MinDistance = Distances[zone][0];
+  if (DistancesTableSize[zone] >= 2) {
+    for (i=1; i<DistancesTableSize[zone]; i++) {
+      if (Distances[zone][i] < MinDistance)
+        MinDistance = Distances[zone][i];
+    }
+  }
 
   if (Distance < DIST_THRESHOLD_MAX[Zone]) {
     // Someone is in !
@@ -1129,6 +1194,8 @@ void setup() {
   sprintf(mqttDeviationValueHighTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_HIGH_TOPIC);
   sprintf(mqttDeviationValueLowTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_LOW_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
+  sprintf(mqttMinDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MIN_DISTANCE_TOPIC);
+  sprintf(mqttMaxDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MAX_DISTANCE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   // Ping Google to check wifi connection

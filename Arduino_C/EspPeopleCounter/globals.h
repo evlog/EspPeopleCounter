@@ -86,6 +86,15 @@ char mqttDistanceModeTopic[150];
 const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";
 char mqttRangingPeriodTopic[150];
 
+const char* MQTT_DISTANCES_ARRAY_SIZE_TOPIC = "distancesArraySize";
+char mqttDistancesArraySizeTopic[150];
+
+const char* MQTT_MAX_DISTANCE_TOPIC = "maxDistance";
+char mqttMaxDistanceTopic[150];
+
+const char* MQTT_MIN_DISTANCE_TOPIC = "minDistance";
+char mqttMinDistanceTopic[150];
+
 const char* MQTT_FLASH_UPDATE_TOPIC = "flashUpdate";
 char mqttFlashUpdateTopic[150];
 
@@ -146,6 +155,12 @@ uint32_t DEVIATION_COUNTER_PERIOD_MS = 120000; //default is 2min.
 uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
 
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 100;
+
+const uint32_t DISTANCES_ARRAY_SIZE = 10;
+
+uint32_t MAX_DISTANCE = 2000;
+
+uint32_t MIN_DISTANCE = 0;
 
 // Define distance metering mode of the sensor (short or long, default is long)
 String  VL53L1_DISTANCE_MODE = "long";
