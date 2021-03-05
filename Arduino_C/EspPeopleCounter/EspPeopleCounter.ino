@@ -773,6 +773,24 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //erial.println(temp_str);
 
+          //temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
+          //temp_str.concat(DISTANCES_ARRAY_SIZE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nMAX_DISTANCE: ");
+          temp_str.concat(MAX_DISTANCE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
+          temp_str.concat("|\nMIN_DISTANCE: ");
+          temp_str.concat(MIN_DISTANCE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //erial.println(temp_str);
+
           temp_str.concat("|\nWIFI_MANAGER_ENABLE: ");
           temp_str.concat(WIFI_MANAGER_ENABLE);
           temp_str.toCharArray(temp, temp_str.length() + 1);
@@ -845,6 +863,10 @@ void topicSubscribe() {
     client.subscribe(mqttDeviationValueLowTopic);
     Serial.println(mqttWifiManagerEnableTopic); 
     client.subscribe(mqttWifiManagerEnableTopic); 
+    Serial.println(mqttMinDistanceTopic);
+    client.subscribe(mqttMinDistanceTopic);
+    Serial.println(mqttMaxDistanceTopic);
+    client.subscribe(mqttMaxDistanceTopic);
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -1035,7 +1057,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin (115200);  
   delay(500);
-  Serial.println("Serial comm established");
+  Serial.println("Serial comm established**");
   Serial.print("Sensor MAC address: ");
   WiFi.mode(WIFI_MODE_STA);
  
@@ -1056,9 +1078,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
-  if (EEPROM.read(0) != 4) {
+  if (EEPROM.read(0) != 5) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 4);
+    EEPROM.write(eeprom_addr, 5);
     EEPROM.commit();
 
     initEepromConfigWrite();

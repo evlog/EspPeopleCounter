@@ -34,18 +34,18 @@ WiFiManager wifiManager;
 //------
 String MAC_ADDRESS;
 
-const char* MQTT_USERNAME = "pi";
-const char* MQTT_PASSWORD = "rjaxtarmas1"; 
-
-const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-const char* MQTT_ADDRESS = "evlog.zapto.org";
-
-// Mark config
-//const char* MQTT_USERNAME = "switchfi";
-//const char* MQTT_PASSWORD = "M@rkmj1989"; 
+//const char* MQTT_USERNAME = "pi";
+//const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 //const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-//const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
+//const char* MQTT_ADDRESS = "evlog.zapto.org";
+
+// Mark config
+const char* MQTT_USERNAME = "switchfi";
+const char* MQTT_PASSWORD = "M@rkmj1989"; 
+
+const char* MQTT_CLIENT = "testClien";  // *** Must be unique
+const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
 
 const char* MQTT_DEBUG_TOPIC = "debug";
 char mqttDebugTopic[150];
@@ -125,12 +125,12 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-const char* WIFI_SSID    = "ubx";
-const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
+//const char* WIFI_SSID    = "Takis";//"ubx";
+//const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
 
 // Mark config
-//const char* WIFI_SSID    = "Netflix";
-//const char* WIFI_PASSWORD = "";
+const char* WIFI_SSID    = "Netflix";
+const char* WIFI_PASSWORD = "";
 
 int WIFI_MANAGER_ENABLE = 1;
 //------
