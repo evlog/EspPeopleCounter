@@ -390,7 +390,7 @@ uint16_t vl531Init(uint8_t zone) {
   else if (VL53L1_DISTANCE_MODE == "long")
     distanceSensor.setDistanceModeLong();
     
-  delay(50);
+  //delay(50);
   distanceSensor.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
   distanceSensor.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
