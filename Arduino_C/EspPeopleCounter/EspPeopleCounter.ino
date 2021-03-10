@@ -1098,7 +1098,7 @@ void setup() {
   //  Serial.println("setPhyMode failed");
   //WiFi.setOutputPower(20.5);
 
-  int x = 0;
+  int x = 1;
 
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
   if (x == 0) {
@@ -1141,22 +1141,7 @@ void setup() {
     Serial.println(esp_wifi_get_protocol(ESP_IF_WIFI_STA, &protocol_bitmap));
     Serial.println(protocol_bitmap);
 
-    /*if (WiFi.status() != WL_CONNECTED) {
-      wifiCounter = 0;
-      //WiFi.setPhyMode(WIFI_PHY_MODE_11N);
-   // wifi_set_phy_mode(PHY_MODE_11N);
-      Serial.println("Wait for WiFi fixed SSID 11N...");
-      while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-        wifiCounter++;
-        if (wifiCounter == 40) {
-          Serial.print("Failed to connect to fixed SSID 11N mode. Restarting.");
-          ESP.reset();
-          break;
-        }
-      }
-    }*/
+
   }
   //---
   //---
