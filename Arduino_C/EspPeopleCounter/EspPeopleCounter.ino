@@ -953,7 +953,7 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
     }
   }
 
-  if (Distance < DIST_THRESHOLD_MAX[Zone]) {
+  if (MinDistance < DIST_THRESHOLD_MAX[Zone]) {
     // Someone is in !
     CurrentZoneStatus = SOMEONE;
   }
