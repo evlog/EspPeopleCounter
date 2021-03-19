@@ -175,8 +175,11 @@ char peopleCounterArray[50];
 
 static int NOBODY = 0;
 static int SOMEONE = 1;
-static int LEFT = 0;
-static int RIGHT = 1;
+static int UPPER_LEFT = 0;
+static int LOWER_RIGHT = 1;
+static int UPPER_RIGHT = 2;
+static int LOWER_LEFT = 3;
+
 
 uint32_t DIST_THRESHOLD_MAX[] = {1850, 1850};   // treshold of the two zones
 
@@ -187,7 +190,7 @@ static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
 // Define ROI config1
-static int center[2] = {231,167}; /* center of the two zones */  
+static int center[4] = {231,167,0,0}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
 

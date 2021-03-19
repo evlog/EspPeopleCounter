@@ -94,8 +94,12 @@ void mqttForceInitConfig() {
   intToEeprom(DIST_THRESHOLD_MAX[1], 19);
   center[0] = 239;
   center[1] = 175;
+  center[2] = 0;
+  center[3] = 0;
   intToEeprom(center[0], 25);
   intToEeprom(center[1], 31);
+  intToEeprom(center[2], 85);
+  intToEeprom(center[3], 91);
   VL53L1_DISTANCE_MODE = "long";
   if(VL53L1_DISTANCE_MODE == "short")
     intToEeprom(1, 37);
@@ -128,6 +132,8 @@ void initEepromConfigWrite() {
   intToEeprom(DIST_THRESHOLD_MAX[1], 19);
   intToEeprom(center[0], 25);
   intToEeprom(center[1], 31);
+  intToEeprom(center[2], 85);
+  intToEeprom(center[3], 91);
   if(VL53L1_DISTANCE_MODE == "short")
     intToEeprom(1, 37);
   else if(VL53L1_DISTANCE_MODE == "long")
@@ -266,6 +272,12 @@ void restoreEppromConfig() {
   center[1] = EepromToInt(31);
   Serial.print("center[1]:");
   Serial.println(center[1]);
+  center[2] = EepromToInt(85);
+  Serial.print("center[2]:");
+  Serial.println(center[2]);
+  center[3] = EepromToInt(91);
+  Serial.print("center[3]:");
+  Serial.println(center[3]);
   if(EepromToInt(37) == 1)
     VL53L1_DISTANCE_MODE = "short";
   if(EepromToInt(37) == 2)
@@ -560,30 +572,35 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   else if (topic_str == mqttRoiConfigTopic) {
     if (message.length() > 4) {
       String roiConfig = message;
-      String p0, p1, p2, p3;
-      StringSplitter *splitterRoi = new StringSplitter(roiConfig, ',', 4);
+      String p0, p1, p2, p3, p4, p5;
+      StringSplitter *splitterRoi = new StringSplitter(roiConfig, ',', 6);
 
       //Read config1 ROI parameters
       p0 = splitterRoi->getItemAtIndex(0);
       p1 = splitterRoi->getItemAtIndex(1);
       p2 = splitterRoi->getItemAtIndex(2);
       p3 = splitterRoi->getItemAtIndex(3); 
-      //config1TopLeftX = p0_1.toInt();
-      //config1TopLeftY = p1_1.toInt();
-      //config1BottomRightX = p2_1.toInt();
-      //config1BottomRightY = p3_1.toInt(); 
+      p4 = splitterRoi->getItemAtIndex(4); 
+      p5 = splitterRoi->getItemAtIndex(5); 
+
       ROI_height = p0.toInt();
       intToEeprom(ROI_height, 55);
       ROI_width = p1.toInt();
       intToEeprom(ROI_width, 61);
       center[0] = p2.toInt();
-      intToEeprom(center[0], 13);
+      intToEeprom(center[0], 25);
       center[1] = p3.toInt();
-      intToEeprom(center[1], 19);
+      intToEeprom(center[1], 31);
+      center[2] = p4.toInt();
+      intToEeprom(center[2], 85);
+      center[3] = p5.toInt();
+      intToEeprom(center[3], 91);
       Serial.println(ROI_height);  
       Serial.println(ROI_width);
       Serial.println(center[0]);
       Serial.println(center[1]);
+      Serial.println(center[2]);
+      Serial.println(center[3]);
       //vl531Init(1); // Initialize sensor for zone 1
       client.publish(mqttRoiConfigTopic, "OK");  
     }
@@ -739,6 +756,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           temp_str.concat(String(center[0]));
           temp_str.concat(',');
           temp_str.concat(String(center[1]));
+          temp_str.concat(',');
+          temp_str.concat(String(center[2]));
+          temp_str.concat(',');
+          temp_str.concat(String(center[3]));
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
@@ -927,8 +948,8 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   int AnEventHasOccured = 0;
   uint16_t peopleCounterLocal = 0;
 
-  static uint16_t Distances[2][DISTANCES_ARRAY_SIZE];
-  static uint8_t DistancesTableSize[2] = {0,0};
+  static uint16_t Distances[4][DISTANCES_ARRAY_SIZE];
+  static uint8_t DistancesTableSize[4] = {0,0,0,0};
   
   uint16_t MinDistance;
   uint8_t i;
@@ -1323,8 +1344,16 @@ void loop() {
   if (zone == 1)
     mqttDistance2 = RangingData;
 
+  if (zone == 2)
+    mqttDistance3 = RangingData;
+
+  if (zone == 3)
+    mqttDistance4 = RangingData;
+
   zone++;
-  zone = zone%2;
+  //zone = zone%2;
+  if (zone == 4)
+    zone = 0;
 
   client.loop();
   //------
