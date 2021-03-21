@@ -464,7 +464,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 
       if ((t0.toInt() != 0) && (t1.toInt() != 0)) {
-        if ((t0.toInt() < 1000) | (t0.toInt()) > 4000 | (t1.toInt() < 1000) | (t1.toInt() > 4000)) {
+        if ((t0.toInt() < 100) | (t0.toInt()) > 4000 | (t1.toInt() < 100) | (t1.toInt() > 4000)) {
           Serial.print(mqttPeopleCountThresholdTopic);
           Serial.println("->ERROR");
           client.publish(mqttPeopleCountThresholdTopic, "ERROR");
