@@ -390,8 +390,8 @@ uint16_t vl531Init(uint8_t zone) {
   
   uint16_t distance;
   
-  if (distanceSensor.init() == false);
-
+  //if (distanceSensor.init() == false); //  check init function in the library
+  distanceSensor.init();
   distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
   //Serial.println("Center:");
