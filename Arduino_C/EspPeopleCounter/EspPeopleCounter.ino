@@ -573,17 +573,19 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (message.length() > 4) {
       String roiConfig = message;
       String p0, p1, p2, p3, p4, p5, p6;
-      StringSplitter *splitterRoi = new StringSplitter(roiConfig, ',', 7);
-
+      StringSplitter *splitterRoi0 = new StringSplitter(roiConfig, ',', 7);
       //Read config1 ROI parameters
-      p0 = splitterRoi->getItemAtIndex(0);
-      p1 = splitterRoi->getItemAtIndex(1);
-      p2 = splitterRoi->getItemAtIndex(2);
-      p3 = splitterRoi->getItemAtIndex(3); 
-      p4 = splitterRoi->getItemAtIndex(4); 
-      p5 = splitterRoi->getItemAtIndex(5); 
-      p6 = splitterRoi->getItemAtIndex(6); 
+      p0 = splitterRoi0->getItemAtIndex(0);
+      p1 = splitterRoi0->getItemAtIndex(1);
+      p2 = splitterRoi0->getItemAtIndex(2);
+      p3 = splitterRoi0->getItemAtIndex(3); 
+      p4 = splitterRoi0->getItemAtIndex(4); 
+      p5 = splitterRoi0->getItemAtIndex(5); 
+      p6 = splitterRoi0->getItemAtIndex(6); 
 
+      StringSplitter *splitterRoi1 = new StringSplitter(p4, ',', 2);
+      p5 = splitterRoi1->getItemAtIndex(0); 
+      p6 = splitterRoi1->getItemAtIndex(1); 
 
       ROI_height = p0.toInt();
       intToEeprom(ROI_height, 55);
@@ -593,9 +595,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       intToEeprom(center[0], 25);
       center[1] = p3.toInt();
       intToEeprom(center[1], 31);
-      center[2] = p4.toInt();
+      center[2] = p5.toInt();
       intToEeprom(center[2], 103);
-      center[3] = p5.toInt();
+      center[3] = p6.toInt();
       intToEeprom(center[3], 109);
       Serial.println(ROI_height);  
       Serial.println(ROI_width);
@@ -603,16 +605,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(center[1]);
       Serial.println(center[2]);
       Serial.println(center[3]);
-      Serial.println('..');
-      Serial.println(p2);
-      Serial.println('.');
-      Serial.println(p3);
-      Serial.println('.');
-      Serial.println(p4);
-      Serial.println('.');
-      Serial.println(p5);
-      Serial.println('.');
-      Serial.println(p6);
+
       //vl531Init(1); // Initialize sensor for zone 1
       client.publish(mqttRoiConfigTopic, "OK");  
     }

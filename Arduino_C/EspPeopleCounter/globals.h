@@ -38,7 +38,7 @@ String MAC_ADDRESS;
 //const char* MQTT_PASSWORD = "rjaxtarmas1"; 
 
 //const char* MQTT_CLIENT = "testClien";  // *** Must be unique
-//const char* MQTT_ADDRESS = "evlog.zapto.org";
+//const char* MQTT_ADDRESS = "esp-32.zapto.org";
 
 // Mark config
 const char* MQTT_USERNAME = "switchfi";
@@ -190,7 +190,7 @@ static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
 // Define ROI config1
-static int center[4] = {231,167,0,0}; /* center of the two zones */  
+static int center[4] = {156,19,236,99}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
 
