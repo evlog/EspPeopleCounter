@@ -953,8 +953,8 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   int AnEventHasOccured = 0;
   uint16_t peopleCounterLocal = 0;
 
-  static uint16_t Distances[4][DISTANCES_ARRAY_SIZE];
-  static uint8_t DistancesTableSize[4] = {0,0,0,0};
+  static uint16_t Distances[2][DISTANCES_ARRAY_SIZE];
+  static uint8_t DistancesTableSize[2] = {0,0};
   
   uint16_t MinDistance;
   uint8_t i;
@@ -985,7 +985,7 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   }
 
   // left zone
-  if ((zone == UPPER_LEFT) | (zone == LOWER_LEFT)) {
+  if (zone == 0) {
 
     if (CurrentZoneStatus != LeftPreviousStatus) {
       // event in left zone has occured
@@ -1335,7 +1335,15 @@ void loop() {
   client.loop();
 
   peopleCounterVarPrev = peopleCounterVar;
-  peopleCounterVar = ProcessPeopleCountingData(RangingData, zone);
+  if (zone == 0)
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0);
+  else if (zone == 1)
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
+  else if (zone == 2)
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0);  
+  else if (zone == 3)
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
+
 
   //Serial.println("**Zone:");
   //Serial.print(zone); 
