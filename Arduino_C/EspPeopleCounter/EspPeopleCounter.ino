@@ -391,7 +391,7 @@ uint16_t vl531Init(uint8_t zone) {
   uint16_t distance;
   
   //if (distanceSensor.init() == false); //  check init function in the library
-  distanceSensor.init();
+  //distanceSensor.init();
   distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
   //Serial.println("Center:");
@@ -402,12 +402,13 @@ uint16_t vl531Init(uint8_t zone) {
   else if (VL53L1_DISTANCE_MODE == "long")
     distanceSensor.setDistanceModeLong();
     
-  //delay(50);
+  delay(50);
   distanceSensor.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
   distanceSensor.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
   distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
   distanceSensor.stopRanging();
+  distanceSensor.clearInterrupt();
 
   return distance;
   
@@ -1098,15 +1099,15 @@ void setup() {
   EEPROM.begin(512);
 
   // Initialize measurements array
-  for (i = 0; i < measArrSize; i++)
+  for (i = 0; i < measArrSize; i++) 
     measArr[i] = 0;
 
 
   
-  //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters
-  if (EEPROM.read(0) != 8) {
+  //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters 
+  if (EEPROM.read(0) != 3) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 5);
+    EEPROM.write(eeprom_addr, 3);
     EEPROM.commit();
 
     initEepromConfigWrite();
@@ -1256,6 +1257,11 @@ void setup() {
 
   //Serial.print("Phy mode:");
   //Serial.println(WiFi.getPhyMode());
+
+  Serial.println("VL53L1X Quick Test");
+
+  if (distanceSensor.init() == false)
+    Serial.println("Sensor online!");
 
 }
 
