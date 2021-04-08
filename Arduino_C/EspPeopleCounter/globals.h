@@ -17,7 +17,7 @@ int zone = 0;
 uint16_t mqttDistance1, mqttDistance2;
 
 // Define the path of the binary file for flash update
-String UPDATE_BINARY_FILE_PATH = "http://evlog.zapto.org/subs/figures/test.bin";//"http://update.switchfi.co.za/firmware/counterd2d1.bin";
+String UPDATE_BINARY_FILE_PATH = "http://update.switchfi.co.za/firmware/counteresp32.bin"; //"http://evlog.zapto.org/subs/figures/test.bin";
 
 // Array to hold measurements for the standard deviation calculation
 const int measArrSize = 500;
@@ -129,7 +129,7 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 //const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
 
 // Mark config
-const char* WIFI_SSID    = "Netflix";
+const char* WIFI_SSID    = "Phil UB";
 const char* WIFI_PASSWORD = "";
 
 int WIFI_MANAGER_ENABLE = 1;
@@ -140,7 +140,7 @@ int WIFI_MANAGER_ENABLE = 1;
 // -----
 
 // Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-uint32_t  MEASUREMENT_BUDGET_MS = 50;
+uint32_t  MEASUREMENT_BUDGET_MS = 33;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
 uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
@@ -154,7 +154,7 @@ uint32_t DEVIATION_COUNTER_PERIOD_MS = 120000; //default is 2min.
 // Define in mm the people counter distance measurement threshold
 uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
 
-uint32_t INTER_MEASUREMENT_PERIOD_MS = 100;
+uint32_t INTER_MEASUREMENT_PERIOD_MS = 33;
 
 const uint32_t DISTANCES_ARRAY_SIZE = 10;
 
@@ -190,7 +190,7 @@ static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
 // Define ROI config1
-static int center[4] = {156,19,236,99}; /* center of the two zones */  
+static int center[4] = {93,229,165,29}; /* center of the two zones */  
 static int Zone = 0;
 static int PplCounter = 0;
 
