@@ -84,18 +84,18 @@ float computeStandardDev (uint32_t newMeas) {
 // Function to read EEPROM and initialize config. parameter
 // -----
 void mqttForceInitConfig() {
-  MEASUREMENT_BUDGET_MS = 50;
+  MEASUREMENT_BUDGET_MS = 33;
   intToEeprom(MEASUREMENT_BUDGET_MS, 1);
-  INTER_MEASUREMENT_PERIOD_MS = 55;
+  INTER_MEASUREMENT_PERIOD_MS = 33;
   intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
   DIST_THRESHOLD_MAX[0] = 1850;
   DIST_THRESHOLD_MAX[1] = 1650;
   intToEeprom(DIST_THRESHOLD_MAX[0], 13);
   intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-  center[0] = 156;
-  center[1] = 19;
-  center[2] = 236;
-  center[3] = 99;
+  center[0] = 93;
+  center[1] = 229;
+  center[2] = 165;
+  center[3] = 29;
   intToEeprom(center[0], 25);
   intToEeprom(center[1], 31);
   intToEeprom(center[2], 103);
@@ -109,9 +109,9 @@ void mqttForceInitConfig() {
   intToEeprom(RANGING_PERIOD_MS, 43); 
   PEOPLE_COUNTER_PERIOD_MS = 120000;
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
-  ROI_height = 5;
+  ROI_height = 8;
   intToEeprom(ROI_height, 55);
-  ROI_width = 5;
+  ROI_width = 8;
   intToEeprom(ROI_width, 61);
   SD_NUM_OF_SAMPLES = 10;
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
@@ -402,7 +402,7 @@ uint16_t vl531Init(uint8_t zone) {
   else if (VL53L1_DISTANCE_MODE == "long")
     distanceSensor.setDistanceModeLong();
     
-  delay(50);
+  delay(MEASUREMENT_BUDGET_MS);
   distanceSensor.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
   distanceSensor.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
   distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
@@ -1327,7 +1327,7 @@ void loop() {
     deviationLowFlag = true;
     if ((deviationLowFlagPrev == false) && (deviationLowFlagPrev == true)) {
       Serial.println("Standard deviation LOW: ");
-      Serial.println(standardDev);
+      //Serial.println(standardDev);
 
       temp_str = String(standardDev);      
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
@@ -1423,7 +1423,7 @@ void loop() {
   if ((currentMillis - measPreviousMillisDeviationAlert) >=  DEVIATION_COUNTER_PERIOD_MS) {
     if (deviationLowFlag) {
       Serial.println("Standard deviation LOW: ");
-      Serial.println(standardDev);
+      //Serial.println(standardDev);
       
       temp_str = String(standardDev);      
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
@@ -1432,7 +1432,7 @@ void loop() {
 
     if (deviationHighFlag) {
       Serial.println("Standard deviation HIGH: ");
-      Serial.println(standardDev);
+      //Serial.println(standardDev);
 
       temp_str = String(standardDev);      
       temp_str.toCharArray(temp, temp_str.length() + 1); //packaging up the data to publish to mqtt whoa...
