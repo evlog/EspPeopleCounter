@@ -116,6 +116,9 @@ char mqttDeviationValueLowTopic[150];
 const char* MQTT_WIFI_MANAGER_ENABLE_TOPIC = "wifiManagerEnable";
 char mqttWifiManagerEnableTopic[150];
 
+const char* MQTT_SENSOR_WIFI_TOPIC = "sensorWifi";
+char mqttSensorWifiTopic[150];
+
 const char* MQTT_DUMMY_TOPIC = "dummy";
 char mqttDummyTopic[150];
 
@@ -132,7 +135,7 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 const char* WIFI_SSID    = "Phil UB";
 const char* WIFI_PASSWORD = "";
 
-int WIFI_MANAGER_ENABLE = 1;
+int WIFI_MANAGER_ENABLE = 0;
 //------
 //------
 
@@ -161,6 +164,9 @@ const uint32_t DISTANCES_ARRAY_SIZE = 10;
 uint32_t MAX_DISTANCE = 2000;
 
 uint32_t MIN_DISTANCE = 0;
+
+String MQTT_WIFI_SSID = "testSsid";
+String MQTT_WIFI_PASSWORD = "12345678";
 
 // Define distance metering mode of the sensor (short or long, default is long)
 String  VL53L1_DISTANCE_MODE = "long";

@@ -119,6 +119,16 @@ void mqttForceInitConfig() {
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   WIFI_MANAGER_ENABLE = 1; 
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
+  //DISTANCES_ARRAY_SIZE = 10;
+  //intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  MAX_DISTANCE = 2000;
+  intToEeprom(MAX_DISTANCE, 91);
+  MIN_DISTANCE = 0;
+  intToEeprom(MIN_DISTANCE, 97);
+  MQTT_WIFI_SSID = "testSsid";
+  strToEeprom(MQTT_WIFI_SSID, 103);
+  MQTT_WIFI_PASSWORD = "12345678";
+  strToEeprom(MQTT_WIFI_PASSWORD, 111);
 }
 // -----
 // -----
@@ -147,13 +157,37 @@ void initEepromConfigWrite() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
-  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
   //intToEeprom(DISTANCES_ARRAY_SIZE, 85);
   intToEeprom(MAX_DISTANCE, 91);
   intToEeprom(MIN_DISTANCE, 97);
+  strToEeprom(MQTT_WIFI_SSID, 103);
+  strToEeprom(MQTT_WIFI_PASSWORD, 111);
+
 }
 // -----
 // -----
+
+
+// Function to store 10-digit str value to EEPROM
+// -----
+void strToEeprom(String param, int addr) {
+  String f;
+  for (int i = 0; i < 8; i++) {
+    EEPROM.write(addr, param[i]);
+    addr+=1;
+  }
+}
+// -----
+// -----
+
+String EepromToStr(int addr) {
+  char data[8];
+
+  for(int i = 0; i < 8; i++) 
+    data[i] = EEPROM.read(addr+i);
+
+  return String(data);
+}
 
 // Function to store 6-digit int value to EEPROM
 // -----
@@ -311,6 +345,15 @@ void restoreEppromConfig() {
   MAX_DISTANCE = EepromToInt(91); 
   Serial.print("MAX_DISTANCE:");
   Serial.println(MAX_DISTANCE);
+  MIN_DISTANCE = EepromToInt(97);
+  Serial.print("MIN_DISTANCE:");
+  Serial.println(MIN_DISTANCE);
+  MQTT_WIFI_SSID = EepromToStr(103); 
+  Serial.print("MQTT_WIFI_SSID:");
+  Serial.println(MQTT_WIFI_SSID);
+  MQTT_WIFI_PASSWORD = EepromToStr(111); 
+  Serial.print("MQTT_WIFI_PASSWORD:");
+  Serial.println(MQTT_WIFI_PASSWORD);
 }
 // -----
 // -----
@@ -728,6 +771,30 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
+
+  else if (topic_str == mqttSensorWifiTopic) {
+    if (message.length() > 2) {
+      String wifiCredentials = message;
+      String ssid, passwd;
+      StringSplitter *splitterTh = new StringSplitter(wifiCredentials, ',', 2);
+
+      //Read threshold
+      ssid = splitterTh->getItemAtIndex(0);
+      passwd = splitterTh->getItemAtIndex(1);
+
+
+      Serial.print(mqttDeviationDataTopic);
+      Serial.println("->OK");
+      MQTT_WIFI_SSID = ssid;
+      strToEeprom(MQTT_WIFI_SSID, 103);
+      MQTT_WIFI_PASSWORD = passwd;
+      strToEeprom(MQTT_WIFI_PASSWORD, 111);
+      client.publish(mqttSensorWifiTopic, "OK");
+       
+      Serial.println(MQTT_WIFI_SSID);
+      Serial.println(MQTT_WIFI_PASSWORD);
+    }
+  }
   
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
@@ -820,6 +887,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
           temp_str.concat("|\nWIFI_MANAGER_ENABLE: ");
           temp_str.concat(WIFI_MANAGER_ENABLE);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\MQTT_WIFI_SSID: ");
+          temp_str.concat(MQTT_WIFI_SSID);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\MQTT_WIFI_PASSWORD: ");
+          temp_str.concat(MQTT_WIFI_PASSWORD);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println(temp_str);
@@ -894,6 +973,8 @@ void topicSubscribe() {
     client.subscribe(mqttMinDistanceTopic);
     Serial.println(mqttMaxDistanceTopic);
     client.subscribe(mqttMaxDistanceTopic);
+    Serial.println(mqttSensorWifiTopic);
+    client.subscribe(mqttSensorWifiTopic);
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -1105,9 +1186,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters 
-  if (EEPROM.read(0) != 3) {
+  if (EEPROM.read(0) != 5) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 3);
+    EEPROM.write(eeprom_addr, 5);
     EEPROM.commit();
 
     initEepromConfigWrite();
@@ -1128,7 +1209,7 @@ void setup() {
   int x = 1;
 
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
-  if (x == 0) {
+  if (WIFI_MANAGER_ENABLE == 0) {
     Serial.print("Connecting to ");
     Serial.println(WIFI_SSID);
     //WiFi.disconnect(true);
@@ -1230,6 +1311,7 @@ void setup() {
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
   sprintf(mqttMinDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MIN_DISTANCE_TOPIC);
   sprintf(mqttMaxDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MAX_DISTANCE_TOPIC);
+  sprintf(mqttSensorWifiTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_WIFI_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   // Ping Google to check wifi connection
