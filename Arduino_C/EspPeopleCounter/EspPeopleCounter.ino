@@ -171,9 +171,10 @@ void initEepromConfigWrite() {
 // Function to store 10-digit str value to EEPROM
 // -----
 void strToEeprom(String param, int addr) {
-  String f;
+
   for (int i = 0; i < 8; i++) {
-    EEPROM.write(addr, param[i]);
+    EEPROM.write(addr, param.charAt(i));
+    EEPROM.commit();
     addr+=1;
   }
 }
@@ -182,9 +183,14 @@ void strToEeprom(String param, int addr) {
 
 String EepromToStr(int addr) {
   char data[8];
+  byte b;
 
-  for(int i = 0; i < 8; i++) 
-    data[i] = EEPROM.read(addr+i);
+  for(int i = 0; i < 8; i++) {
+    b = EEPROM.read(addr+i);
+    data[i] = (char) b;
+  }
+
+  
 
   return String(data);
 }
@@ -349,9 +355,11 @@ void restoreEppromConfig() {
   Serial.print("MIN_DISTANCE:");
   Serial.println(MIN_DISTANCE);
   MQTT_WIFI_SSID = EepromToStr(103); 
-  Serial.print("MQTT_WIFI_SSID:");
+  MQTT_WIFI_SSID = MQTT_WIFI_SSID.substring(0,8);
+  Serial.print("MQTT_WIFI_SSID:"); 
   Serial.println(MQTT_WIFI_SSID);
   MQTT_WIFI_PASSWORD = EepromToStr(111); 
+  MQTT_WIFI_PASSWORD = MQTT_WIFI_PASSWORD.substring(0,8);
   Serial.print("MQTT_WIFI_PASSWORD:");
   Serial.println(MQTT_WIFI_PASSWORD);
 }
