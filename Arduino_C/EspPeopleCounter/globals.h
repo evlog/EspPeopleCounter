@@ -119,6 +119,12 @@ char mqttWifiManagerEnableTopic[150];
 const char* MQTT_SENSOR_WIFI_TOPIC = "sensorWifi";
 char mqttSensorWifiTopic[150];
 
+const char* MQTT_SHUTDOWN_SENSOR1_TOPIC = "shutdownSensor1";
+char mqttShutdownSensor1Topic[150];
+
+const char* MQTT_SHUTDOWN_SENSOR2_TOPIC = "shutdownSensor2";
+char mqttShutdownSensor2Topic[150];
+
 const char* MQTT_DUMMY_TOPIC = "dummy";
 char mqttDummyTopic[150];
 
@@ -175,8 +181,10 @@ char peopleCounterArray[50];
 
 
 //Optional interrupt and shutdown pins
-#define  SHUTDOWN_PIN 2    
-#define  INTERRUPT_PIN 3
+static int  SHUTDOWN_PIN1 = 2;    
+static int  INTERRUPT_PIN1 = 3;
+static int  SHUTDOWN_PIN2 = 4;    
+static int  INTERRUPT_PIN2 = 5;
 
 
 static int NOBODY = 0;
