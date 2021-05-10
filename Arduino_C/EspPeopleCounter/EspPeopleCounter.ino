@@ -1295,10 +1295,16 @@ void setup() {
   Wire.setClock(400000);
 
   //Initialize SHUTDOWN and INTERRUPT pins
-  pinMode(SHUTDOWN_PIN1, INPUT);
-  pinMode(INTERRUPT_PIN1, INPUT);
-  pinMode(SHUTDOWN_PIN2, INPUT);
-  pinMode(INTERRUPT_PIN2, INPUT);
+  pinMode(SHUTDOWN_PIN1, OUTPUT);
+  digitalWrite(SHUTDOWN_PIN1, LOW);
+  pinMode(INTERRUPT_PIN1, OUTPUT);
+  digitalWrite(INTERRUPT_PIN1, LOW);
+  pinMode(SHUTDOWN_PIN2, OUTPUT);
+  digitalWrite(SHUTDOWN_PIN2, LOW);
+  pinMode(INTERRUPT_PIN2, OUTPUT);
+  digitalWrite(INTERRUPT_PIN2, LOW);
+
+  
 
   // Initialize EPPROM memory
   EEPROM.begin(512);
