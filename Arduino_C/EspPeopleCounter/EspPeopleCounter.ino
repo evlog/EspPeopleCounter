@@ -119,8 +119,8 @@ void mqttForceInitConfig() {
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   WIFI_MANAGER_ENABLE = 1; 
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
-  //DISTANCES_ARRAY_SIZE = 10;
-  //intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  DISTANCES_ARRAY_SIZE = 10;
+  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
   MAX_DISTANCE = 2000;
   intToEeprom(MAX_DISTANCE, 91);
   MIN_DISTANCE = 0;
@@ -165,7 +165,7 @@ void initEepromConfigWrite() {
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
-  //intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
   intToEeprom(MAX_DISTANCE, 91);
   intToEeprom(MIN_DISTANCE, 97);
   strToEeprom(MQTT_WIFI_SSID, 115);
@@ -356,9 +356,9 @@ void restoreEppromConfig() {
   WIFI_MANAGER_ENABLE = EepromToInt(79); 
   Serial.print("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
-  //DISTANCES_ARRAY_SIZE = EepromToInt(85); 
-  //Serial.print("DISTANCES_ARRAY_SIZE:");
-  //Serial.println(DISTANCES_ARRAY_SIZE);
+  DISTANCES_ARRAY_SIZE = EepromToInt(85); 
+  Serial.print("DISTANCES_ARRAY_SIZE:");
+  Serial.println(DISTANCES_ARRAY_SIZE);
   MAX_DISTANCE = EepromToInt(91); 
   Serial.print("MAX_DISTANCE:");
   Serial.println(MAX_DISTANCE);
@@ -496,7 +496,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   p[length] = NULL;
   String message(p);
   String topic_str(topic);
-  char temp[300];
+  char temp[500];
   String temp_str;
   uint32_t tmp_int;
 
@@ -886,6 +886,22 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ESP.restart();
     }
   }
+
+  else if (topic_str == mqttDistancesArraySizeTopic) {
+    if (isValidNumber(message)) {
+      if ((message.toInt() == 1) | (message.toInt() == 2) | (message.toInt() == 4) | (message.toInt() == 6) | (message.toInt() == 10)) {   
+        client.publish(mqttDistancesArraySizeTopic, "OK");
+        DISTANCES_ARRAY_SIZE = message.toInt();
+        intToEeprom(DISTANCES_ARRAY_SIZE, 85);
+        client.publish(mqttDistancesArraySizeTopic, "OK");
+      }
+      else {
+        Serial.print(mqttDistancesArraySizeTopic);
+        Serial.println("->ERROR");
+        client.publish(mqttDistancesArraySizeTopic, "ERROR");        
+      }
+    }
+  }
   
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
@@ -958,8 +974,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //erial.println(temp_str);
 
-          //temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
-          //temp_str.concat(DISTANCES_ARRAY_SIZE);
+          temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
+          temp_str.concat(DISTANCES_ARRAY_SIZE);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //erial.println(temp_str);
@@ -982,37 +998,37 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\MQTT_WIFI_SSID: ");
+          temp_str.concat("|\nMQTT_WIFI_SSID: ");
           temp_str.concat(MQTT_WIFI_SSID);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\MQTT_WIFI_PASSWORD: ");
+          temp_str.concat("|\nMQTT_WIFI_PASSWORD: ");
           temp_str.concat(MQTT_WIFI_PASSWORD);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\SHUTDOWN_PIN1: ");
+          temp_str.concat("|\nSHUTDOWN_PIN1: ");
           temp_str.concat(SHUTDOWN_PIN1);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\INTERRUPT_PIN1: ");
+          temp_str.concat("|\nINTERRUPT_PIN1: ");
           temp_str.concat(INTERRUPT_PIN1);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\SHUTDOWN_PIN2: ");
+          temp_str.concat("|\nSHUTDOWN_PIN2: ");
           temp_str.concat(SHUTDOWN_PIN2);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\INTERRUPT_PIN2: ");
+          temp_str.concat("|\nINTERRUPT_PIN2: ");
           temp_str.concat(INTERRUPT_PIN2);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
@@ -1093,6 +1109,8 @@ void topicSubscribe() {
     client.subscribe(mqttShutdownSensor1Topic);
     Serial.println(mqttShutdownSensor2Topic);
     client.subscribe(mqttShutdownSensor2Topic);
+    Serial.println(mqttDistancesArraySizeTopic);
+    client.subscribe(mqttDistancesArraySizeTopic);
     //Serial.println(mqttDummyTopic); 
     client.subscribe(mqttDummyTopic); 
     client.loop();
@@ -1153,7 +1171,7 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   int AnEventHasOccured = 0;
   uint16_t peopleCounterLocal = 0;
 
-  static uint16_t Distances[2][DISTANCES_ARRAY_SIZE];
+  static uint16_t Distances[2][10/*DISTANCES_ARRAY_SIZE*/];
   static uint8_t DistancesTableSize[2] = {0,0};
   
   uint16_t MinDistance;
@@ -1316,9 +1334,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters 
-  if (EEPROM.read(0) != 6) {
+  if (EEPROM.read(0) != 7) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 6);
+    EEPROM.write(eeprom_addr, 7);
     EEPROM.commit();
 
     initEepromConfigWrite();
@@ -1460,6 +1478,7 @@ void setup() {
   sprintf(mqttSensorWifiTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_WIFI_TOPIC);
   sprintf(mqttShutdownSensor1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SHUTDOWN_SENSOR1_TOPIC);
   sprintf(mqttShutdownSensor2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SHUTDOWN_SENSOR2_TOPIC);
+  sprintf(mqttDistancesArraySizeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCES_ARRAY_SIZE_TOPIC);
   sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
   // Ping Google to check wifi connection
