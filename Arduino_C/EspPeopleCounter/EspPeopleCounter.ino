@@ -134,9 +134,9 @@ void mqttForceInitConfig() {
   INTERRUPT_PIN1 = 3;
   intToEeprom(INTERRUPT_PIN1, 137);
   SHUTDOWN_PIN2 = 4;
-  intToEeprom(SHUTDOWN_PIN2, 131);
+  intToEeprom(SHUTDOWN_PIN2, 143);
   INTERRUPT_PIN2 = 5;
-  intToEeprom(INTERRUPT_PIN2, 137);
+  intToEeprom(INTERRUPT_PIN2, 149);
 }
 // -----
 // -----
@@ -172,8 +172,8 @@ void initEepromConfigWrite() {
   strToEeprom(MQTT_WIFI_PASSWORD, 123);
   intToEeprom(SHUTDOWN_PIN1, 131);
   intToEeprom(INTERRUPT_PIN1, 137);
-  intToEeprom(SHUTDOWN_PIN2, 131);
-  intToEeprom(INTERRUPT_PIN2, 137);
+  intToEeprom(SHUTDOWN_PIN2, 143);
+  intToEeprom(INTERRUPT_PIN2, 149);
 }
 // -----
 // -----
@@ -496,7 +496,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   p[length] = NULL;
   String message(p);
   String topic_str(topic);
-  char temp[500];
+  char temp[400];
   String temp_str;
   uint32_t tmp_int;
 
@@ -1022,8 +1022,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nSHUTDOWN_PIN2: ");
-          temp_str.concat(SHUTDOWN_PIN2);
+         // temp_str.concat("|\nSHUTDOWN_PIN2: ");
+        //  temp_str.concat(SHUTDOWN_PIN2);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
@@ -1032,6 +1032,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           temp_str.concat(INTERRUPT_PIN2);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
+          Serial.println("Publish sensorConfig");
           Serial.println(temp_str);
         }
       }
@@ -1171,29 +1172,117 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   int AnEventHasOccured = 0;
   uint16_t peopleCounterLocal = 0;
 
-  static uint16_t Distances[2][10/*DISTANCES_ARRAY_SIZE*/];
+  static uint16_t Distances_1[2][1/*DISTANCES_ARRAY_SIZE*/];
+  static uint16_t Distances_2[2][2/*DISTANCES_ARRAY_SIZE*/];
+  static uint16_t Distances_4[2][4/*DISTANCES_ARRAY_SIZE*/];
+  static uint16_t Distances_6[2][6/*DISTANCES_ARRAY_SIZE*/];
+  static uint16_t Distances_10[2][10/*DISTANCES_ARRAY_SIZE*/];
   static uint8_t DistancesTableSize[2] = {0,0};
   
   uint16_t MinDistance;
   uint8_t i;
 
   // Add just picked distance to the table of the corresponding zone
-  if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
-    Distances[zone][DistancesTableSize[zone]] = Distance;
-    DistancesTableSize[zone] ++;
+  if (DISTANCES_ARRAY_SIZE == 1) {
+    if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+      Distances_1[zone][DistancesTableSize[zone]] = Distance;
+      DistancesTableSize[zone] ++;
+    }
+    else {
+      for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+        Distances_1[zone][i-1] = Distances_1[zone][i];
+      Distances_1[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+    }
   }
-  else {
-    for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
-      Distances[zone][i-1] = Distances[zone][i];
-    Distances[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+  else if (DISTANCES_ARRAY_SIZE == 2) {
+    if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+      Distances_2[zone][DistancesTableSize[zone]] = Distance;
+      DistancesTableSize[zone] ++;
+    }
+    else {
+      for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+        Distances_2[zone][i-1] = Distances_2[zone][i];
+      Distances_2[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 4) {
+    if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+      Distances_4[zone][DistancesTableSize[zone]] = Distance;
+      DistancesTableSize[zone] ++;
+    }
+    else {
+      for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+        Distances_4[zone][i-1] = Distances_4[zone][i];
+      Distances_4[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 6) {
+    if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+      Distances_6[zone][DistancesTableSize[zone]] = Distance;
+      DistancesTableSize[zone] ++;
+    }
+    else {
+      for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+        Distances_6[zone][i-1] = Distances_6[zone][i];
+      Distances_6[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 10) {
+    if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
+      Distances_10[zone][DistancesTableSize[zone]] = Distance;
+      DistancesTableSize[zone] ++;
+    }
+    else {
+      for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
+        Distances_10[zone][i-1] = Distances_10[zone][i];
+      Distances_10[zone][DISTANCES_ARRAY_SIZE-1] = Distance;
+    }
   }
   
   // pick up the min distance
-  MinDistance = Distances[zone][0];
-  if (DistancesTableSize[zone] >= 2) {
-    for (i=1; i<DistancesTableSize[zone]; i++) {
-      if (Distances[zone][i] < MinDistance)
-        MinDistance = Distances[zone][i];
+  if (DISTANCES_ARRAY_SIZE == 1) {
+    MinDistance = Distances_1[zone][0];
+    if (DistancesTableSize[zone] >= 2) {
+      for (i=1; i<DistancesTableSize[zone]; i++) {
+        if (Distances_1[zone][i] < MinDistance)
+          MinDistance = Distances_1[zone][i];
+      }
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 2) {
+    MinDistance = Distances_2[zone][0];
+    if (DistancesTableSize[zone] >= 2) {
+      for (i=1; i<DistancesTableSize[zone]; i++) {
+        if (Distances_2[zone][i] < MinDistance)
+          MinDistance = Distances_2[zone][i];
+      }
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 4) {
+    MinDistance = Distances_4[zone][0];
+    if (DistancesTableSize[zone] >= 2) {
+      for (i=1; i<DistancesTableSize[zone]; i++) {
+        if (Distances_4[zone][i] < MinDistance)
+          MinDistance = Distances_4[zone][i];
+      }
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 6) {
+    MinDistance = Distances_6[zone][0];
+    if (DistancesTableSize[zone] >= 2) {
+      for (i=1; i<DistancesTableSize[zone]; i++) {
+        if (Distances_6[zone][i] < MinDistance)
+          MinDistance = Distances_6[zone][i];
+      }
+    }
+  }
+  else if (DISTANCES_ARRAY_SIZE == 10) {
+    MinDistance = Distances_10[zone][0];
+    if (DistancesTableSize[zone] >= 2) {
+      for (i=1; i<DistancesTableSize[zone]; i++) {
+        if (Distances_10[zone][i] < MinDistance)
+          MinDistance = Distances_10[zone][i];
+      }
     }
   }
 
@@ -1334,9 +1423,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters 
-  if (EEPROM.read(0) != 7) {
+  if (EEPROM.read(0) != 8) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 7);
+    EEPROM.write(eeprom_addr, 8);
     EEPROM.commit();
 
     initEepromConfigWrite();
