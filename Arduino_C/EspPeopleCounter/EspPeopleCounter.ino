@@ -126,9 +126,9 @@ void mqttForceInitConfig() {
   MIN_DISTANCE = 0;
   intToEeprom(MIN_DISTANCE, 97);
   MQTT_WIFI_SSID = "testSsid";
-  strToEeprom(MQTT_WIFI_SSID, 115);
+  strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
   MQTT_WIFI_PASSWORD = "12345678";
-  strToEeprom(MQTT_WIFI_PASSWORD, 123);
+  strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
   SHUTDOWN_PIN1 = 2;
   intToEeprom(SHUTDOWN_PIN1, 131);
   INTERRUPT_PIN1 = 3;
@@ -168,8 +168,8 @@ void initEepromConfigWrite() {
   intToEeprom(DISTANCES_ARRAY_SIZE, 85);
   intToEeprom(MAX_DISTANCE, 91);
   intToEeprom(MIN_DISTANCE, 97);
-  strToEeprom(MQTT_WIFI_SSID, 115);
-  strToEeprom(MQTT_WIFI_PASSWORD, 123);
+  strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
+  strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
   intToEeprom(SHUTDOWN_PIN1, 131);
   intToEeprom(INTERRUPT_PIN1, 137);
   intToEeprom(SHUTDOWN_PIN2, 143);
@@ -181,9 +181,32 @@ void initEepromConfigWrite() {
 
 // Function to store 10-digit str value to EEPROM
 // -----
-void strToEeprom(String param, int addr) {
+void strToEeprom(String param, int addr, int len) {
 
-  for (int i = 0; i < 8; i++) {
+  String len_s;
+
+  len_s = String(len);
+
+  if (len < 10) {
+    EEPROM.write(addr, 0);
+    EEPROM.commit();
+    addr+=1;
+  
+    EEPROM.write(addr, len_s.substring(0,1).toInt());  
+    EEPROM.commit();
+    addr+=1;
+  }
+  else {
+    EEPROM.write(addr, len_s.substring(0,1).toInt());
+    EEPROM.commit();
+    addr+=1;
+  
+    EEPROM.write(addr, len_s.substring(1,2).toInt());
+    EEPROM.commit();
+    addr+=1;
+  }
+     
+  for (int i = 0; i < len; i++) {
     EEPROM.write(addr, param.charAt(i));
     EEPROM.commit();
     addr+=1;
@@ -193,16 +216,24 @@ void strToEeprom(String param, int addr) {
 // -----
 
 String EepromToStr(int addr) {
-  char data[8];
+  char data[20];
   byte b;
+  EEPPROM_STR_LEN = 0;
 
-  for(int i = 0; i < 8; i++) {
-    b = EEPROM.read(addr+i);
-    data[i] = (char) b;
+  EEPPROM_STR_LEN +=  EEPROM.read(addr) * 10;
+  EEPPROM_STR_LEN +=  EEPROM.read(addr+1) * 1;   
+
+  Serial.print("EEPROM len:");
+  Serial.println(EEPPROM_STR_LEN);
+
+  if (EEPPROM_STR_LEN <= 20) {
+    for(int i = 0; i < (EEPPROM_STR_LEN); i++) {
+      b = EEPROM.read(addr+i+2);
+      Serial.println((char)b);
+      data[i] = (char) b;
+    }
   }
-
-  
-
+  Serial.println(String(data));
   return String(data);
 }
 
@@ -365,12 +396,12 @@ void restoreEppromConfig() {
   MIN_DISTANCE = EepromToInt(97);
   Serial.print("MIN_DISTANCE:");
   Serial.println(MIN_DISTANCE);
-  MQTT_WIFI_SSID = EepromToStr(115); 
-  MQTT_WIFI_SSID = MQTT_WIFI_SSID.substring(0,8);
+  MQTT_WIFI_SSID = EepromToStr(155); 
+  MQTT_WIFI_SSID = MQTT_WIFI_SSID.substring(0, EEPPROM_STR_LEN);
   Serial.print("MQTT_WIFI_SSID:"); 
   Serial.println(MQTT_WIFI_SSID);
-  MQTT_WIFI_PASSWORD = EepromToStr(123); 
-  MQTT_WIFI_PASSWORD = MQTT_WIFI_PASSWORD.substring(0,8);
+  MQTT_WIFI_PASSWORD = EepromToStr(177); 
+  MQTT_WIFI_PASSWORD = MQTT_WIFI_PASSWORD.substring(0, EEPPROM_STR_LEN);
   Serial.print("MQTT_WIFI_PASSWORD:");
   Serial.println(MQTT_WIFI_PASSWORD);
   SHUTDOWN_PIN1 = EepromToInt(131); 
@@ -817,9 +848,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       Serial.print(mqttDeviationDataTopic);
       Serial.println("->OK");
       MQTT_WIFI_SSID = ssid;
-      strToEeprom(MQTT_WIFI_SSID, 115);
+      Serial.print("SSID length:");
+      Serial.println(ssid.length());
+      strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
       MQTT_WIFI_PASSWORD = passwd;
-      strToEeprom(MQTT_WIFI_PASSWORD, 123);
+      Serial.print("Password length:");
+      Serial.println(passwd.length());
+      strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
       client.publish(mqttSensorWifiTopic, "OK");
        
       Serial.println(MQTT_WIFI_SSID);
@@ -1010,14 +1045,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nSHUTDOWN_PIN1: ");
-          temp_str.concat(SHUTDOWN_PIN1);
+      //    temp_str.concat("|\nSHUTDOWN_PIN1: ");
+      //    temp_str.concat(SHUTDOWN_PIN1);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nINTERRUPT_PIN1: ");
-          temp_str.concat(INTERRUPT_PIN1);
+         // temp_str.concat("|\nINTERRUPT_PIN1: ");
+         // temp_str.concat(INTERRUPT_PIN1);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
