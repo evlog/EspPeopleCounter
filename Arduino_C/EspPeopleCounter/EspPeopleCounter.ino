@@ -844,21 +844,26 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ssid = splitterWifi->getItemAtIndex(0);
       passwd = splitterWifi->getItemAtIndex(1);
 
-
-      Serial.print(mqttDeviationDataTopic);
-      Serial.println("->OK");
-      MQTT_WIFI_SSID = ssid;
-      Serial.print("SSID length:");
-      Serial.println(ssid.length());
-      strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
-      MQTT_WIFI_PASSWORD = passwd;
-      Serial.print("Password length:");
-      Serial.println(passwd.length());
-      strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
-      client.publish(mqttSensorWifiTopic, "OK");
-       
-      Serial.println(MQTT_WIFI_SSID);
-      Serial.println(MQTT_WIFI_PASSWORD);
+      if ((ssid.length() > 20) | (passwd.length() > 20)) {
+        Serial.println("->ERROR");
+        client.publish(mqttSensorWifiTopic, "ERROR");
+      }
+      else {
+        Serial.print(mqttDeviationDataTopic);
+        Serial.println("->OK");
+        MQTT_WIFI_SSID = ssid;
+        Serial.print("SSID length:");
+        Serial.println(ssid.length());
+        strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
+        MQTT_WIFI_PASSWORD = passwd;
+        Serial.print("Password length:");
+        Serial.println(passwd.length());
+        strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
+        client.publish(mqttSensorWifiTopic, "OK");
+         
+        Serial.println(MQTT_WIFI_SSID);
+        Serial.println(MQTT_WIFI_PASSWORD);
+      }
     }
   }
 
@@ -1063,8 +1068,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nINTERRUPT_PIN2: ");
-          temp_str.concat(INTERRUPT_PIN2);
+         // temp_str.concat("|\nINTERRUPT_PIN2: ");
+         // temp_str.concat(INTERRUPT_PIN2);
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println("Publish sensorConfig");
@@ -1500,7 +1505,10 @@ void setup() {
     //wifi_set_user_sup_rate(RATE_11N_MCS5, RATE_11N_MCS7);
     //wifi_set_user_rate_limit(RC_LIMIT_11N,  0,  RATE_11N_MCS7,  RATE_11N_MCS5);
     delay(1000);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    if (WIFI_PASSWORD == " ")
+      WiFi.begin(WIFI_SSID);
+    else
+      WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   
     int wifiCounter = 0;
     Serial.println("Wait for WiFi fixed SSID 11N...");
@@ -1524,7 +1532,10 @@ void setup() {
     // if first SSID failes try with the MQTT provided credentials
     if (WiFi.status() != WL_CONNECTED) {
       wifiCounter = 0;
-      WiFi.begin(MQTT_WIFI_SSID.c_str(), MQTT_WIFI_PASSWORD.c_str());
+      if (MQTT_WIFI_PASSWORD.c_str() == " ")
+        WiFi.begin(MQTT_WIFI_SSID.c_str());
+      else
+        WiFi.begin(MQTT_WIFI_SSID.c_str(), MQTT_WIFI_PASSWORD.c_str());
       Serial.print("Connecting to ");
       Serial.println(MQTT_WIFI_SSID);
       while (WiFi.status() != WL_CONNECTED) {
