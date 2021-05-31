@@ -8,6 +8,7 @@ unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisPeople = 0;
 unsigned long measPreviousMillisDataSerialReport = 0;
 unsigned long measPreviousMillisDeviationAlert = 0;
+unsigned long measPreviousMillisReboot = 0;
 
 uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;

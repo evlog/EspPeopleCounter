@@ -1845,6 +1845,18 @@ void loop() {
   //------
   //------
 
+  // Reboot the device every 12hrs
+  //------
+  currentMillis = millis();
+  if ((currentMillis - measPreviousMillisReboot) >=  43200000) {
+    Serial.print("Reboot every 12hrs: ");
+
+    measPreviousMillisReboot = millis();
+    ESP.restart();
+  }
+  //------
+  //------
+
   currentMillis = millis();
   // Check and publish the people counter value every PEOPLE_COUNTER_PERIOD_MS ms
   //------
