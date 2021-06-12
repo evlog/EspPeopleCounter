@@ -139,8 +139,8 @@ PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 //const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
 
 // Mark config
-const char* WIFI_SSID    = "Phil UB";
-const char* WIFI_PASSWORD = "";
+const char* WIFI_SSID    = "Intuitive";
+const char* WIFI_PASSWORD = "SensorS123";
 
 int WIFI_MANAGER_ENABLE = 0;
 //------
