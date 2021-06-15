@@ -48,55 +48,20 @@ const char* MQTT_PASSWORD = "M@rkmj1989";
 const char* MQTT_CLIENT = "testClien";  // *** Must be unique
 const char* MQTT_ADDRESS = "mqtt.switchfi.co.za";
 
-const char* MQTT_DEBUG_TOPIC = "debug";
-char mqttDebugTopic[150];
 
-const char* MQTT_PEOPLE_RESET_TOPIC = "people/reset";
-char mqttPeopleResetTopic[150];
-
-const char* MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC = "threshold";
-char mqttPeopleCountThresholdTopic[150];
-
-const char* MQTT_PEOPLE_COUNT_TOPIC = "people/count";
+const char* MQTT_PEOPLE_COUNT_TOPIC = "people/count";  //**
 char mqttPeopleCountTopic[150];
 
-const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";
+const char* MQTT_SENSOR_REBOOT_TOPIC = "reboot";  //**
 char mqttSensorRebootTopic[150];
 
-const char* MQTT_SENSOR_RESET_TOPIC = "reset";
+const char* MQTT_SENSOR_RESET_TOPIC = "reset";  //**
 char mqttSensorResetTopic[150];
 
-const char* MQTT_MEASUREMENT_BUDGET_TOPIC = "measurementBudget";
-char mqttMeasurementBudgetTopic[150];
-
-const char* MQTT_MEASUREMENT_PERIOD_TOPIC = "measurementPeriod";
-char mqttMeasurementPeriodTopic[150];
-
-const char* MQTT_ROI_CONFIG_TOPIC = "roiConfig";
-char mqttRoiConfigTopic[150];
-
-const char* MQTT_DISTANCE1_MEASUREMENT_TOPIC = "distance1Measurement";
-char mqttDistance1MeasurementTopic[150];
-
-const char* MQTT_DISTANCE2_MEASUREMENT_TOPIC = "distance2Measurement";
-char mqttDistance2MeasurementTopic[150];
-
-const char* MQTT_DISTANCE_MODE_TOPIC = "distanceMode";
-char mqttDistanceModeTopic[150];
-
-const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";
+const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";  //**
 char mqttRangingPeriodTopic[150];
 
-const char* MQTT_DISTANCES_ARRAY_SIZE_TOPIC = "distancesArraySize";
-char mqttDistancesArraySizeTopic[150];
-
-const char* MQTT_MAX_DISTANCE_TOPIC = "maxDistance";
-char mqttMaxDistanceTopic[150];
-
-const char* MQTT_MIN_DISTANCE_TOPIC = "minDistance";
-char mqttMinDistanceTopic[150];
-
-const char* MQTT_FLASH_UPDATE_TOPIC = "flashUpdate";
+const char* MQTT_FLASH_UPDATE_TOPIC = "flashUpdate"; //**
 char mqttFlashUpdateTopic[150];
 
 const char* MQTT_GET_SENSOR_CONFIG_TOPIC = "getSensorConfig";
@@ -105,29 +70,11 @@ char mqttGetSensorConfigTopic[150];
 const char* MQTT_RESTORE_SENSOR_CONFIG_TOPIC = "restoreSensorConfig";
 char mqttRestoreSensorConfigTopic[150];
 
-const char* MQTT_DEVIATION_DATA_TOPIC = "deviation/data";
-char mqttDeviationDataTopic[150];
-
-const char* MQTT_DEVIATION_VALUE_HIGH_TOPIC = "deviation/value/high";
-char mqttDeviationValueHighTopic[150];
-
-const char* MQTT_DEVIATION_VALUE_LOW_TOPIC = "deviation/value/low";
-char mqttDeviationValueLowTopic[150];
-
 const char* MQTT_WIFI_MANAGER_ENABLE_TOPIC = "wifiManagerEnable";
 char mqttWifiManagerEnableTopic[150];
 
 const char* MQTT_SENSOR_WIFI_TOPIC = "sensorWifi";
 char mqttSensorWifiTopic[150];
-
-const char* MQTT_SHUTDOWN_SENSOR1_TOPIC = "shutdownSensor1";
-char mqttShutdownSensor1Topic[150];
-
-const char* MQTT_SHUTDOWN_SENSOR2_TOPIC = "shutdownSensor2";
-char mqttShutdownSensor2Topic[150];
-
-const char* MQTT_DUMMY_TOPIC = "dummy";
-char mqttDummyTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
@@ -153,7 +100,7 @@ int WIFI_MANAGER_ENABLE = 0;
 uint32_t  MEASUREMENT_BUDGET_MS = 33;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
-uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
+uint32_t  RANGING_PERIOD_MS = 10; // default is 10sec.
 
 // Define in ms how often to send people counter data over MQTT 
 uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 

@@ -26,7 +26,6 @@ void randomMqttClientName() {
   MQTT_CLIENT_NAME.concat(String(random(1,30000)));
   //MQTT_CLIENT_NAME.toCharArray(MQTT_CLIENT, MQTT_CLIENT_NAME.length() + 1);
   MQTT_CLIENT = MQTT_CLIENT_NAME.c_str();
-  //sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
   Serial.print("Client name: ");
   Serial.println(MQTT_CLIENT);
 }
@@ -506,52 +505,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   // Check received messages and topics
   //------
-  if (topic_str == mqttDebugTopic) {
-    if (message == "Hello ESP8266") {
-      client.publish(mqttDebugTopic, "Hello server");
-      if (DEBUG) Serial.println("MQTT communication established.");
-    }
-  }
-  else if (topic_str == mqttPeopleResetTopic) {
-    if (message == "true") {
-      peopleCounter = 0;
-      client.publish(mqttPeopleResetTopic, "OK");
-      if (DEBUG) Serial.println("mqttPeopleResetTopic -> true");
-    }
-  }
-  else if (topic_str == mqttPeopleCountThresholdTopic) {
-    if (message.length() > 2) {
-      String countThreshold = message;
-      String t0, t1;
-      StringSplitter *splitterTh = new StringSplitter(countThreshold, ',', 2);
-
-      //Read threshold
-      t0 = splitterTh->getItemAtIndex(0);
-      t1 = splitterTh->getItemAtIndex(1);
-
-
-      if ((t0.toInt() != 0) && (t1.toInt() != 0)) {
-        if ((t0.toInt() < 100) | (t0.toInt()) > 4000 | (t1.toInt() < 100) | (t1.toInt() > 4000)) {
-          Serial.print(mqttPeopleCountThresholdTopic);
-          Serial.println("->ERROR");
-          client.publish(mqttPeopleCountThresholdTopic, "ERROR");
-          client.publish(mqttDummyTopic, "Ignore this message");
-        }
-        else {
-          Serial.print(mqttPeopleCountThresholdTopic);
-          Serial.println("->OK");
-          DIST_THRESHOLD_MAX[0] = t0.toInt();
-          intToEeprom(DIST_THRESHOLD_MAX[0], 13);
-          DIST_THRESHOLD_MAX[1] = t1.toInt();
-          intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-          client.publish(mqttPeopleCountThresholdTopic, "OK");
-        }
-      }
-      Serial.println(DIST_THRESHOLD_MAX[0]);
-      Serial.println(DIST_THRESHOLD_MAX[1]);
-    }
-  }
-  else if (topic_str == mqttSensorRebootTopic) {
+  if (topic_str == mqttSensorRebootTopic) {
     if (message == "true") {
       client.publish(mqttSensorRebootTopic, "OK");
       if (DEBUG) Serial.println("mqttSensorRebootTopic -> true");
@@ -567,137 +521,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ESP.restart();
     }
   }
-  else if (topic_str == mqttMeasurementBudgetTopic) {
-    if (isValidNumber(message)) {
-      if ((message.toInt() != 15) && (message.toInt() != 20) && (message.toInt() != 33) && (message.toInt() != 50) && (message.toInt() != 100) && (message.toInt() != 200) && (message.toInt() != 500)) {     
-        Serial.print(mqttMeasurementBudgetTopic);
-        Serial.println("->ERROR");
-        client.publish(mqttMeasurementBudgetTopic, "ERROR");
-      }
-      else {
-        MEASUREMENT_BUDGET_MS = message.toInt();
-        intToEeprom(MEASUREMENT_BUDGET_MS, 1);
-        Serial.print(mqttMeasurementBudgetTopic);
-        Serial.println("->OK");
-        client.publish(mqttMeasurementBudgetTopic, "OK");
-      }
-      if (DEBUG) { 
-        Serial.print("mqttMeasurementBudgetTopic -> ");
-        Serial.println(MEASUREMENT_BUDGET_MS);
-      }
-    }
-  }
-  else if (topic_str == mqttMeasurementPeriodTopic) {
-    if (isValidNumber(message)) {
-      if (message.toInt() < 20) {
-        Serial.print(mqttMeasurementPeriodTopic);
-        Serial.println("->ERROR");
-        client.publish(mqttMeasurementPeriodTopic, "ERROR");
-      }
-      else {
-        INTER_MEASUREMENT_PERIOD_MS = message.toInt();  
-        intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);   
-        Serial.print(mqttMeasurementPeriodTopic);
-        Serial.println("->OK");
-        client.publish(mqttMeasurementPeriodTopic, "OK");   
-      }
-
-      if (DEBUG) { 
-        Serial.print("mqttMeasurementPeriodTopic -> ");
-        Serial.println(INTER_MEASUREMENT_PERIOD_MS);
-      }
-    }
-  }
-  else if (topic_str == mqttMaxDistanceTopic) {
-    if (isValidNumber(message)) {
-      MAX_DISTANCE = message.toInt();  
-      intToEeprom(MAX_DISTANCE, 91);   
-      Serial.print(mqttMaxDistanceTopic);
-      Serial.println("->OK");
-      client.publish(mqttMaxDistanceTopic, "OK");   
-
-      if (DEBUG) { 
-        Serial.print("mqttMaxDistanceTopic -> ");
-        Serial.println(MAX_DISTANCE);
-      }
-    }
-  }
-  else if (topic_str == mqttMinDistanceTopic) {
-    if (isValidNumber(message)) {
-      MIN_DISTANCE = message.toInt();  
-      intToEeprom(MIN_DISTANCE, 97);   
-      Serial.print(mqttMinDistanceTopic);
-      Serial.println("->OK");
-      client.publish(mqttMinDistanceTopic, "OK");   
-
-      if (DEBUG) { 
-        Serial.print("mqttMinDistanceTopic -> ");
-        Serial.println(MIN_DISTANCE);
-      }
-    }
-  }
-  else if (topic_str == mqttRoiConfigTopic) {
-    if (message.length() > 4) {
-      String roiConfig = message;
-      String p0, p1, p2, p3, p4, p5, p6;
-      StringSplitter *splitterRoi0 = new StringSplitter(roiConfig, ',', 7);
-      //Read config1 ROI parameters
-      p0 = splitterRoi0->getItemAtIndex(0);
-      p1 = splitterRoi0->getItemAtIndex(1);
-      p2 = splitterRoi0->getItemAtIndex(2);
-      p3 = splitterRoi0->getItemAtIndex(3); 
-      p4 = splitterRoi0->getItemAtIndex(4); 
-      p5 = splitterRoi0->getItemAtIndex(5); 
-      p6 = splitterRoi0->getItemAtIndex(6); 
-
-      StringSplitter *splitterRoi1 = new StringSplitter(p4, ',', 2);
-      p5 = splitterRoi1->getItemAtIndex(0); 
-      p6 = splitterRoi1->getItemAtIndex(1); 
-
-      ROI_height = p0.toInt();
-      intToEeprom(ROI_height, 55);
-      ROI_width = p1.toInt();
-      intToEeprom(ROI_width, 61);
-      center[0] = p2.toInt();
-      intToEeprom(center[0], 25);
-      center[1] = p3.toInt();
-      intToEeprom(center[1], 31);
-      center[2] = p5.toInt();
-      intToEeprom(center[2], 103);
-      center[3] = p6.toInt();
-      intToEeprom(center[3], 109);
-      Serial.println(ROI_height);  
-      Serial.println(ROI_width);
-      Serial.println(center[0]);
-      Serial.println(center[1]);
-      Serial.println(center[2]);
-      Serial.println(center[3]);
-
-      //vl531Init(1); // Initialize sensor for zone 1
-      client.publish(mqttRoiConfigTopic, "OK");  
-    }
-  }
-  else if (topic_str == mqttDistanceModeTopic) {
-    if (message.length() > 3) {
-      if (message == "short") {
-        VL53L1_DISTANCE_MODE = "short";
-        intToEeprom(1, 37);
-        client.publish(mqttDistanceModeTopic, "OK");
-      }
-      else if (message == "long") {     
-        VL53L1_DISTANCE_MODE = "long";
-        intToEeprom(2, 37);
-        client.publish(mqttDistanceModeTopic, "OK");
-      }          
-      if (DEBUG) { 
-        Serial.print("mqttDistanceModeTopic -> ");
-        Serial.println(VL53L1_DISTANCE_MODE);
-      }
-    }
-  }
   else if (topic_str == mqttRangingPeriodTopic) {
     if (isValidNumber(message)) {
-      if (message.toInt() < 1000) {
+      if ((message.toInt() != 9) | (message.toInt() != 10) | (message.toInt() != 12) | (message.toInt() != 15) | (message.toInt() != 20) | (message.toInt() != 40) | (message.toInt() != 60) | (message.toInt() != 100) | (message.toInt() != 200) | (message.toInt() != 400) | (message.toInt() != 800) | (message.toInt() != 1600) | (message.toInt() != 3200)) {
         Serial.print(mqttRangingPeriodTopic);
         Serial.println("->ERROR");
       }
@@ -740,37 +566,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
-  else if (topic_str == mqttDeviationDataTopic) {
-    if (message.length() > 2) {
-      String deviationData = message;
-      String t2, t3;
-      StringSplitter *splitterDev = new StringSplitter(deviationData, ',', 2);
-
-      //Read threshold
-      t2 = splitterDev->getItemAtIndex(0);
-      t3 = splitterDev->getItemAtIndex(1);
-
-
-      if ((t2.toInt() != 0) && (t3.toInt() != 0)) {
-        if ((t2.toInt() < 5) | (t2.toInt()) > measArrSize | (t3.toInt() < 1)) {
-          Serial.print(mqttDeviationDataTopic);
-          Serial.println("->ERROR");
-          client.publish(mqttDeviationDataTopic, "ERROR");
-        }
-        else {
-          Serial.print(mqttDeviationDataTopic);
-          Serial.println("->OK");
-          SD_NUM_OF_SAMPLES = t2.toInt();
-          intToEeprom(SD_NUM_OF_SAMPLES, 67);
-          SD_DEVIATION_THRESHOLD = t3.toInt();
-          intToEeprom(SD_DEVIATION_THRESHOLD, 73);
-          client.publish(mqttDeviationDataTopic, "OK");
-        }
-      }
-      Serial.println(SD_NUM_OF_SAMPLES);
-      Serial.println(SD_DEVIATION_THRESHOLD);
-    }
-  }
+  
   else if (topic_str == mqttWifiManagerEnableTopic) {
     if (isValidNumber(message)) {
       if ((message.toInt() == 1) | (message.toInt() == 0)) {   
@@ -810,7 +606,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         client.publish(mqttSensorWifiTopic, "ERROR");
       }
       else {
-        Serial.print(mqttDeviationDataTopic);
+        Serial.print(mqttSensorWifiTopic);
         Serial.println("->OK");
         MQTT_WIFI_SSID = ssid;
         Serial.print("SSID length:");
@@ -828,82 +624,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
-  else if (topic_str == mqttShutdownSensor1Topic) {
-    if (message.length() > 2) {
-      String shutdownPins1 = message;
-      String shutdownPin1_str, intPin1_str;
-      uint8_t shutdownPin1, intPin1;
-      StringSplitter *splitterPins1 = new StringSplitter(shutdownPins1, ',', 2);
-
-      //Read threshold
-      shutdownPin1_str = splitterPins1->getItemAtIndex(0);
-      intPin1_str = splitterPins1->getItemAtIndex(1);
-      shutdownPin1 = shutdownPin1_str.toInt();
-      intPin1 = intPin1_str.toInt();
-
-
-      Serial.print(mqttShutdownSensor1Topic);
-      Serial.println("->OK");
-      SHUTDOWN_PIN1 = shutdownPin1;
-      intToEeprom(SHUTDOWN_PIN1, 131);
-      INTERRUPT_PIN1 = intPin1;
-      intToEeprom(INTERRUPT_PIN1, 137);
-      client.publish(mqttShutdownSensor1Topic, "OK");
-       
-      Serial.println(SHUTDOWN_PIN1);
-      Serial.println(INTERRUPT_PIN1);
-      Serial.println("Shutdown/interrupt pins changed, restarting...");
-      delay(1000);
-      ESP.restart();
-    }
-  }
-
-  else if (topic_str == mqttShutdownSensor2Topic) {
-    if (message.length() > 2) {
-      String shutdownPins2 = message;
-      String shutdownPin2_str, intPin2_str;
-      uint8_t shutdownPin2, intPin2;
-      StringSplitter *splitterPins2 = new StringSplitter(shutdownPins2, ',', 2);
-
-      //Read threshold
-      shutdownPin2_str = splitterPins2->getItemAtIndex(0);
-      intPin2_str = splitterPins2->getItemAtIndex(1);
-      shutdownPin2 = shutdownPin2_str.toInt();
-      intPin2 = intPin2_str.toInt();
-
-
-      Serial.print(mqttShutdownSensor1Topic);
-      Serial.println("->OK");
-      SHUTDOWN_PIN2 = shutdownPin2;
-      intToEeprom(SHUTDOWN_PIN2, 143);
-      INTERRUPT_PIN2 = intPin2;
-      intToEeprom(INTERRUPT_PIN2, 149);
-      client.publish(mqttShutdownSensor2Topic, "OK");
-       
-      Serial.println(SHUTDOWN_PIN2);
-      Serial.println(INTERRUPT_PIN2);
-      Serial.println("Shutdown/interrupt pins changed, restarting...");
-      delay(1000);
-      ESP.restart();
-    }
-  }
-
-  else if (topic_str == mqttDistancesArraySizeTopic) {
-    if (isValidNumber(message)) {
-      if ((message.toInt() == 1) | (message.toInt() == 2) | (message.toInt() == 4) | (message.toInt() == 6) | (message.toInt() == 10)) {   
-        client.publish(mqttDistancesArraySizeTopic, "OK");
-        DISTANCES_ARRAY_SIZE = message.toInt();
-        intToEeprom(DISTANCES_ARRAY_SIZE, 85);
-        client.publish(mqttDistancesArraySizeTopic, "OK");
-      }
-      else {
-        Serial.print(mqttDistancesArraySizeTopic);
-        Serial.println("->ERROR");
-        client.publish(mqttDistancesArraySizeTopic, "ERROR");        
-      }
-    }
-  }
-  
   else if (topic_str == mqttGetSensorConfigTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -1039,18 +759,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }  
-  /*else if (topic_str == mqttDistance1MeasurementTopic) {
-    if (isValidNumber(message)) {
-      INTER_MEASUREMENT_PERIOD_MS = message.toInt();
-      // Initialize sensor with new congig. value 
-      vl531Init(1);    
-      client.publish(mqttMeasurementBudgetTopic, "OK");
-      if (DEBUG) { 
-        Serial.print("mqttMeasurementPeriodTopic -> ");
-        Serial.println(INTER_MEASUREMENT_PERIOD_MS);
-      }
-    }
-  }*/
   //------
   //------
 }
@@ -1060,31 +768,13 @@ void topicSubscribe() {
   if(client.connected()) {
 
     Serial.println("Subscribe to MQTT topics: ");
-
-    Serial.println(mqttDebugTopic);
-    client.subscribe(mqttDebugTopic);
-    Serial.println(mqttPeopleResetTopic);
-    client.subscribe(mqttPeopleResetTopic);      
-    Serial.println(mqttPeopleCountThresholdTopic);
-    client.subscribe(mqttPeopleCountThresholdTopic); 
+      
     Serial.println(mqttPeopleCountTopic);
     client.subscribe(mqttPeopleCountTopic); 
     Serial.println(mqttSensorRebootTopic);    
     client.subscribe(mqttSensorRebootTopic);
     Serial.println(mqttSensorResetTopic);    
-    client.subscribe(mqttSensorResetTopic);
-    Serial.println(mqttMeasurementBudgetTopic);
-    client.subscribe(mqttMeasurementBudgetTopic);
-    Serial.println(mqttMeasurementPeriodTopic);
-    client.subscribe(mqttMeasurementPeriodTopic);
-    Serial.println(mqttRoiConfigTopic); 
-    client.subscribe(mqttRoiConfigTopic);     
-    Serial.println(mqttDistance1MeasurementTopic); 
-    client.subscribe(mqttDistance1MeasurementTopic);  
-    Serial.println(mqttDistance2MeasurementTopic); 
-    client.subscribe(mqttDistance2MeasurementTopic); 
-    Serial.println(mqttDistanceModeTopic); 
-    client.subscribe(mqttDistanceModeTopic); 
+    client.subscribe(mqttSensorResetTopic);      
     Serial.println(mqttRangingPeriodTopic); 
     client.subscribe(mqttRangingPeriodTopic); 
     Serial.println(mqttFlashUpdateTopic); 
@@ -1093,28 +783,10 @@ void topicSubscribe() {
     client.subscribe(mqttGetSensorConfigTopic); 
     Serial.println(mqttRestoreSensorConfigTopic); 
     client.subscribe(mqttRestoreSensorConfigTopic); 
-    Serial.println(mqttDeviationDataTopic); 
-    client.subscribe(mqttDeviationDataTopic); 
-    Serial.println(mqttDeviationValueHighTopic); 
-    client.subscribe(mqttDeviationValueHighTopic);
-    Serial.println(mqttDeviationValueLowTopic); 
-    client.subscribe(mqttDeviationValueLowTopic);
     Serial.println(mqttWifiManagerEnableTopic); 
     client.subscribe(mqttWifiManagerEnableTopic); 
-    Serial.println(mqttMinDistanceTopic);
-    client.subscribe(mqttMinDistanceTopic);
-    Serial.println(mqttMaxDistanceTopic);
-    client.subscribe(mqttMaxDistanceTopic);
     Serial.println(mqttSensorWifiTopic);
     client.subscribe(mqttSensorWifiTopic);
-    Serial.println(mqttShutdownSensor1Topic);
-    client.subscribe(mqttShutdownSensor1Topic);
-    Serial.println(mqttShutdownSensor2Topic);
-    client.subscribe(mqttShutdownSensor2Topic);
-    Serial.println(mqttDistancesArraySizeTopic);
-    client.subscribe(mqttDistancesArraySizeTopic);
-    //Serial.println(mqttDummyTopic); 
-    client.subscribe(mqttDummyTopic); 
     client.loop();
   }  
 }
@@ -1134,7 +806,6 @@ void mqttReconnect() {
   MQTT_CLIENT_NAME.concat(String(random(1,30000)));
   //MQTT_CLIENT_NAME.toCharArray(MQTT_CLIENT, MQTT_CLIENT_NAME.length() + 1);
   MQTT_CLIENT = MQTT_CLIENT_NAME.c_str();
-  //sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
   Serial.print("Client name: ");
   Serial.println(MQTT_CLIENT);
   //------
@@ -1247,7 +918,7 @@ bool D6T_checkPEC(uint8_t buf[], int n) {
 uint8_t para[3] = {0};
 // Configure sampling time
 void configSamplignTime() {
-  switch(samplingTime){
+  switch(RANGING_PERIOD_MS){
     case SAMPLE_TIME_0009MS:
       para[0] = PARA_0009MS_1;
       para[1] = PARA_0009MS_2;
@@ -1474,33 +1145,15 @@ void setup() {
   client.setCallback(mqttCallback);
 
   // Define MQTT topic names
-  sprintf(mqttDebugTopic, "%s", MQTT_DEBUG_TOPIC);
-  sprintf(mqttPeopleResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_RESET_TOPIC);   
-  sprintf(mqttPeopleCountThresholdTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_THRESHOLD_TOPIC);
   sprintf(mqttPeopleCountTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_TOPIC);
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
-  sprintf(mqttSensorResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_RESET_TOPIC);
-  sprintf(mqttMeasurementBudgetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_BUDGET_TOPIC);
-  sprintf(mqttMeasurementPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MEASUREMENT_PERIOD_TOPIC);
-  sprintf(mqttRoiConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_ROI_CONFIG_TOPIC); 
-  sprintf(mqttDistance1MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE1_MEASUREMENT_TOPIC);
-  sprintf(mqttDistance2MeasurementTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE2_MEASUREMENT_TOPIC);
-  sprintf(mqttDistanceModeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCE_MODE_TOPIC);
+  sprintf(mqttSensorResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_RESET_TOPIC); 
   sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
   sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
-  sprintf(mqttDeviationDataTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_DATA_TOPIC);
-  sprintf(mqttDeviationValueHighTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_HIGH_TOPIC);
-  sprintf(mqttDeviationValueLowTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DEVIATION_VALUE_LOW_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
-  sprintf(mqttMinDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MIN_DISTANCE_TOPIC);
-  sprintf(mqttMaxDistanceTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_MAX_DISTANCE_TOPIC);
   sprintf(mqttSensorWifiTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_WIFI_TOPIC);
-  sprintf(mqttShutdownSensor1Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SHUTDOWN_SENSOR1_TOPIC);
-  sprintf(mqttShutdownSensor2Topic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SHUTDOWN_SENSOR2_TOPIC);
-  sprintf(mqttDistancesArraySizeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DISTANCES_ARRAY_SIZE_TOPIC);
-  sprintf(mqttDummyTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_DUMMY_TOPIC);
 
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
