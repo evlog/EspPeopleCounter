@@ -94,8 +94,8 @@ void mqttForceInitConfig() {
     intToEeprom(1, 37);
   else if(VL53L1_DISTANCE_MODE == "long")
     intToEeprom(2, 37);
-  RANGING_PERIOD_MS = 10000;    
-  intToEeprom(RANGING_PERIOD_MS, 43); 
+  SAMPLE_TIME_MS = 10000;    
+  intToEeprom(SAMPLE_TIME_MS, 43); 
   PEOPLE_COUNTER_PERIOD_MS = 120000;
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
   ROI_height = 8;
@@ -126,6 +126,8 @@ void mqttForceInitConfig() {
   intToEeprom(SHUTDOWN_PIN2, 143);
   INTERRUPT_PIN2 = 5;
   intToEeprom(INTERRUPT_PIN2, 149);
+  comparingNumInc = 16;
+  intToEeprom(comparingNumInc, 155);
 }
 // -----
 // -----
@@ -145,7 +147,7 @@ void initEepromConfigWrite() {
     intToEeprom(1, 37);
   else if(VL53L1_DISTANCE_MODE == "long")
     intToEeprom(2, 37);    
-  intToEeprom(RANGING_PERIOD_MS, 43); 
+  intToEeprom(SAMPLE_TIME_MS, 43); 
   Serial.println("**");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS);
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
@@ -163,6 +165,7 @@ void initEepromConfigWrite() {
   intToEeprom(INTERRUPT_PIN1, 137);
   intToEeprom(SHUTDOWN_PIN2, 143);
   intToEeprom(INTERRUPT_PIN2, 149);
+  intToEeprom(comparingNumInc, 155);
 }
 // -----
 // -----
@@ -355,9 +358,9 @@ void restoreEppromConfig() {
     VL53L1_DISTANCE_MODE = "long";  
   Serial.print("VL53L1_DISTANCE_MODE:");
   Serial.println(VL53L1_DISTANCE_MODE);
-  RANGING_PERIOD_MS = EepromToInt(43);
-  Serial.print("RANGING_PERIOD_MS:");
-  Serial.println(RANGING_PERIOD_MS);
+  SAMPLE_TIME_MS = EepromToInt(43);
+  Serial.print("SAMPLE_TIME_MS:");
+  Serial.println(SAMPLE_TIME_MS);
   PEOPLE_COUNTER_PERIOD_MS = EepromToInt(49); 
   Serial.print("PEOPLE_COUNTER_PERIOD_MS:");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS); 
@@ -405,6 +408,9 @@ void restoreEppromConfig() {
   INTERRUPT_PIN2 = EepromToInt(149); 
   Serial.print("INTERRUPT_PIN2:");
   Serial.println(INTERRUPT_PIN2);
+  comparingNumInc = EepromToInt(155); 
+  Serial.print("comparingNumInc:");
+  Serial.println(comparingNumInc);
 }
 // -----
 // -----
@@ -521,22 +527,41 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       ESP.restart();
     }
   }
-  else if (topic_str == mqttRangingPeriodTopic) {
+  else if (topic_str == mqttSampleTimeTopic) {
     if (isValidNumber(message)) {
       if ((message.toInt() != 9) | (message.toInt() != 10) | (message.toInt() != 12) | (message.toInt() != 15) | (message.toInt() != 20) | (message.toInt() != 40) | (message.toInt() != 60) | (message.toInt() != 100) | (message.toInt() != 200) | (message.toInt() != 400) | (message.toInt() != 800) | (message.toInt() != 1600) | (message.toInt() != 3200)) {
-        Serial.print(mqttRangingPeriodTopic);
+        Serial.print(mqttSampleTimeTopic);
         Serial.println("->ERROR");
       }
       else {
-        RANGING_PERIOD_MS = message.toInt();
-        intToEeprom(RANGING_PERIOD_MS, 43);
-        Serial.print(mqttRangingPeriodTopic);
+        SAMPLE_TIME_MS = message.toInt();
+        intToEeprom(SAMPLE_TIME_MS, 43);
+        Serial.print(mqttSampleTimeTopic);
         Serial.println("->OK");
-        client.publish(mqttRangingPeriodTopic, "OK");
+        client.publish(mqttSampleTimeTopic, "OK");
       }   
       if (DEBUG) { 
-        Serial.print("mqttRangingPeriodTopic -> ");
-        Serial.println(RANGING_PERIOD_MS);
+        Serial.print("mqttSampleTimeTopic -> ");
+        Serial.println(SAMPLE_TIME_MS);
+      }
+    }
+  }  
+  else if (topic_str == mqttComparingNumIncTopic) {
+    if (isValidNumber(message)) {
+      if ((message.toInt() < 1) | (message.toInt() > 39)) {
+        Serial.print(mqttComparingNumIncTopic);
+        Serial.println("->ERROR");
+      }
+      else {
+        comparingNumInc = message.toInt();
+        intToEeprom(comparingNumInc, 155);
+        Serial.print(mqttSampleTimeTopic);
+        Serial.println("->OK");
+        client.publish(mqttComparingNumIncTopic, "OK");
+      }   
+      if (DEBUG) { 
+        Serial.print("mqttSampleTimeTopic -> ");
+        Serial.println(comparingNumInc);
       }
     }
   }  
@@ -671,8 +696,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nRANGING_PERIOD_MS: ");
-          temp_str.concat(RANGING_PERIOD_MS);
+          temp_str.concat("|\nSAMPLE_TIME_MS: ");
+          temp_str.concat(SAMPLE_TIME_MS);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
@@ -775,8 +800,8 @@ void topicSubscribe() {
     client.subscribe(mqttSensorRebootTopic);
     Serial.println(mqttSensorResetTopic);    
     client.subscribe(mqttSensorResetTopic);      
-    Serial.println(mqttRangingPeriodTopic); 
-    client.subscribe(mqttRangingPeriodTopic); 
+    Serial.println(mqttSampleTimeTopic); 
+    client.subscribe(mqttSampleTimeTopic); 
     Serial.println(mqttFlashUpdateTopic); 
     client.subscribe(mqttFlashUpdateTopic); 
     Serial.println(mqttGetSensorConfigTopic); 
@@ -918,7 +943,7 @@ bool D6T_checkPEC(uint8_t buf[], int n) {
 uint8_t para[3] = {0};
 // Configure sampling time
 void configSamplignTime() {
-  switch(RANGING_PERIOD_MS){
+  switch(SAMPLE_TIME_MS){
     case SAMPLE_TIME_0009MS:
       para[0] = PARA_0009MS_1;
       para[1] = PARA_0009MS_2;
@@ -1148,7 +1173,7 @@ void setup() {
   sprintf(mqttPeopleCountTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_PEOPLE_COUNT_TOPIC);
   sprintf(mqttSensorRebootTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_REBOOT_TOPIC);
   sprintf(mqttSensorResetTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_RESET_TOPIC); 
-  sprintf(mqttRangingPeriodTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RANGING_PERIOD_TOPIC);
+  sprintf(mqttSampleTimeTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SAMPLE_TIME_TOPIC);
   sprintf(mqttFlashUpdateTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_FLASH_UPDATE_TOPIC);
   sprintf(mqttGetSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_GET_SENSOR_CONFIG_TOPIC);
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);

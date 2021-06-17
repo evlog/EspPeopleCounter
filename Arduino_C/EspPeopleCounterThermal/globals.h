@@ -58,8 +58,8 @@ char mqttSensorRebootTopic[150];
 const char* MQTT_SENSOR_RESET_TOPIC = "reset";  //**
 char mqttSensorResetTopic[150];
 
-const char* MQTT_RANGING_PERIOD_TOPIC = "rangingPeriod";  //**
-char mqttRangingPeriodTopic[150];
+const char* MQTT_SAMPLE_TIME_TOPIC = "sampleTime";  //**
+char mqttSampleTimeTopic[150];
 
 const char* MQTT_FLASH_UPDATE_TOPIC = "flashUpdate"; //**
 char mqttFlashUpdateTopic[150];
@@ -75,6 +75,9 @@ char mqttWifiManagerEnableTopic[150];
 
 const char* MQTT_SENSOR_WIFI_TOPIC = "sensorWifi";
 char mqttSensorWifiTopic[150];
+
+const char* MQTT_COMPARING_NUM_INC_TOPIC = "comparingNumInc";
+char mqttComparingNumIncTopic[150];
 
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
@@ -100,7 +103,7 @@ int WIFI_MANAGER_ENABLE = 0;
 uint32_t  MEASUREMENT_BUDGET_MS = 33;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
-uint32_t  RANGING_PERIOD_MS = 10; // default is 10sec.
+uint32_t  SAMPLE_TIME_MS = 10; // default is 10sec.
 
 // Define in ms how often to send people counter data over MQTT 
 uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
@@ -234,7 +237,8 @@ bool deviationHighFlag = false;
 #define PARA_3200MS_3 ((uint8_t)0x0D)
 
 /***** Setting Parameter 1 *****/
-#define comparingNumInc 16 // x samplingTime ms   (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
+uint8_t comparingNumInc = 16;
+//#define comparingNumInc 16 // x samplingTime ms   (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
 #define comparingNumDec 16  // x samplingTime ms  (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
 #define threshHoldInc 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Enable)  
 #define threshHoldDec 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Disable)
