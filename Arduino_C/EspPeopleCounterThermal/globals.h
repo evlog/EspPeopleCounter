@@ -79,14 +79,23 @@ char mqttSensorWifiTopic[150];
 const char* MQTT_COMPARING_NUM_INC_TOPIC = "comparingNumInc";
 char mqttComparingNumIncTopic[150];
 
+const char* MQTT_COMPARING_NUM_DEC_TOPIC = "comparingNumDec";
+char mqttComparingNumDecTopic[150];
+
+const char* MQTT_THRESH_HOLD_INC_TOPIC = "threshHoldInc";
+char mqttthreshHoldIncTopic[150];
+
+const char* MQTT_THRESH_HOLD_DEC_TOPIC = "threshHoldDec";
+char mqttthreshHoldDecTopic[150];
+
 
 void mqttCallback(char*, byte*, unsigned int); // This function is called when an MQTT message is received
 
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-//const char* WIFI_SSID    = "Manyeleti";//"ubx";
-//const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
+//const char* WIFI_SSID    = "ubx";
+//const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
 
 // Mark config
 const char* WIFI_SSID    = "Phil UB";
@@ -99,28 +108,10 @@ int WIFI_MANAGER_ENABLE = 0;
 // vl53l1 configruation and variables
 // -----
 
-// Timing budget set through VL53L1_SetMeasurementTimingBudgetMicroSeconds().
-uint32_t  MEASUREMENT_BUDGET_MS = 33;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
 uint32_t  SAMPLE_TIME_MS = 10; // default is 10sec.
 
-// Define in ms how often to send people counter data over MQTT 
-uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
-
-// Define in ms how often to send deviation alert report
-uint32_t DEVIATION_COUNTER_PERIOD_MS = 120000; //default is 2min. 
-
-// Define in mm the people counter distance measurement threshold
-uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0; 
-
-uint32_t INTER_MEASUREMENT_PERIOD_MS = 33;
-
-uint32_t DISTANCES_ARRAY_SIZE = 10;
-
-uint32_t MAX_DISTANCE = 2000;
-
-uint32_t MIN_DISTANCE = 0;
 
 String MQTT_WIFI_SSID = "testSsid";
 String MQTT_WIFI_PASSWORD = "12345678";
@@ -239,9 +230,12 @@ bool deviationHighFlag = false;
 /***** Setting Parameter 1 *****/
 uint8_t comparingNumInc = 16;
 //#define comparingNumInc 16 // x samplingTime ms   (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
-#define comparingNumDec 16  // x samplingTime ms  (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
-#define threshHoldInc 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Enable)  
-#define threshHoldDec 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Disable)
+uint8_t comparingNumDec = 16;
+//#define comparingNumDec 16  // x samplingTime ms  (range: 1 to 39)  (example) 16 x 100 ms -> 1.6 sec
+uint8_t threshHoldInc = 10;
+//#define threshHoldInc 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Enable)  
+uint8_t threshHoldDec = 10;
+//#define threshHoldDec 10 //  /10 degC   (example) 10 -> 1.0 degC (temperature change > 1.0 degC -> Disable)
 //bool  enablePix[8] = {true, true, true, true, true, true, true, true};
 /****************************/
 

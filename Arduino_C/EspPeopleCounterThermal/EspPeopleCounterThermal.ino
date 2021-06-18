@@ -7,7 +7,6 @@ extern "C" {
 #include <PubSubClient.h> // Library for MQTT
 #include <Wire.h>
 #include <StringSplitter.h>
-#include <SparkFun_VL53L1X.h>
 #include "ESP32HTTPUpdate.h"
 #include <EEPROM.h>
 #include "globals.h"
@@ -32,140 +31,41 @@ void randomMqttClientName() {
 // ----- 
 // -----
 
-// Function to compute standard deviation on sensor samples
-// -----
-float computeStandardDev (uint32_t newMeas) {
-  uint16_t i;
-  uint32_t sum = 0;
-  float mean = 0;
-  float dev = 0;
-  float temp = 0; 
-
-  for (i = (measArrSize - 1); i >= 1; i--)
-    measArr[i] = measArr[i-1];
-
-  measArr[0] = newMeas;
-
-  for (i = 0; i < SD_NUM_OF_SAMPLES; i++) {
-    sum += measArr[i];
-    Serial.println(measArr[i]);
-  }
-
-  mean = (float)sum / (float)SD_NUM_OF_SAMPLES;
-
-  for (i = 0; i < SD_NUM_OF_SAMPLES; i++)
-    temp += (((float)measArr[i] - mean) * ((float)measArr[i] - mean));
-
-  dev = sqrt((1.0/(float)(SD_NUM_OF_SAMPLES - 1)) * temp);
-
-  //Serial.println("Average:");
-  //Serial.println(mean);
-
-  Serial.println("Deviation:");
-  Serial.println(dev);
-
-  return dev;
-}
-
-// ----- 
-// -----
 
 // Function to read EEPROM and initialize config. parameter
 // -----
 void mqttForceInitConfig() {
-  MEASUREMENT_BUDGET_MS = 33;
-  intToEeprom(MEASUREMENT_BUDGET_MS, 1);
-  INTER_MEASUREMENT_PERIOD_MS = 33;
-  intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
-  DIST_THRESHOLD_MAX[0] = 1850;
-  DIST_THRESHOLD_MAX[1] = 1650;
-  intToEeprom(DIST_THRESHOLD_MAX[0], 13);
-  intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-  center[0] = 93;
-  center[1] = 229;
-  center[2] = 165;
-  center[3] = 29;
-  intToEeprom(center[0], 25);
-  intToEeprom(center[1], 31);
-  intToEeprom(center[2], 103);
-  intToEeprom(center[3], 109);
-  VL53L1_DISTANCE_MODE = "long";
-  if(VL53L1_DISTANCE_MODE == "short")
-    intToEeprom(1, 37);
-  else if(VL53L1_DISTANCE_MODE == "long")
-    intToEeprom(2, 37);
   SAMPLE_TIME_MS = 10000;    
   intToEeprom(SAMPLE_TIME_MS, 43); 
-  PEOPLE_COUNTER_PERIOD_MS = 120000;
-  intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
-  ROI_height = 8;
-  intToEeprom(ROI_height, 55);
-  ROI_width = 8;
-  intToEeprom(ROI_width, 61);
-  SD_NUM_OF_SAMPLES = 10;
-  intToEeprom(SD_NUM_OF_SAMPLES, 67);
-  SD_DEVIATION_THRESHOLD = 5;
-  intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   WIFI_MANAGER_ENABLE = 1; 
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
-  DISTANCES_ARRAY_SIZE = 10;
-  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
-  MAX_DISTANCE = 2000;
-  intToEeprom(MAX_DISTANCE, 91);
-  MIN_DISTANCE = 0;
-  intToEeprom(MIN_DISTANCE, 97);
   MQTT_WIFI_SSID = "testSsid";
   strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
   MQTT_WIFI_PASSWORD = "12345678";
   strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
-  SHUTDOWN_PIN1 = 2;
-  intToEeprom(SHUTDOWN_PIN1, 131);
-  INTERRUPT_PIN1 = 3;
-  intToEeprom(INTERRUPT_PIN1, 137);
-  SHUTDOWN_PIN2 = 4;
-  intToEeprom(SHUTDOWN_PIN2, 143);
-  INTERRUPT_PIN2 = 5;
-  intToEeprom(INTERRUPT_PIN2, 149);
   comparingNumInc = 16;
   intToEeprom(comparingNumInc, 155);
+  comparingNumDec = 16;
+  intToEeprom(comparingNumDec, 161);
+  threshHoldInc = 10;
+  intToEeprom(threshHoldInc, 167);
+  threshHoldDec = 10;
+  intToEeprom(threshHoldDec, 173);
 }
 // -----
 // -----
 
 // Function to read EEPROM and initialize config. parameter
 // -----
-void initEepromConfigWrite() {
-  intToEeprom(MEASUREMENT_BUDGET_MS, 1);
-  intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
-  intToEeprom(DIST_THRESHOLD_MAX[0], 13);
-  intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-  intToEeprom(center[0], 25);
-  intToEeprom(center[1], 31);
-  intToEeprom(center[2], 103);
-  intToEeprom(center[3], 109);
-  if(VL53L1_DISTANCE_MODE == "short")
-    intToEeprom(1, 37);
-  else if(VL53L1_DISTANCE_MODE == "long")
-    intToEeprom(2, 37);    
+void initEepromConfigWrite() {    
   intToEeprom(SAMPLE_TIME_MS, 43); 
-  Serial.println("**");
-  Serial.println(PEOPLE_COUNTER_PERIOD_MS);
-  intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
-  intToEeprom(ROI_height, 55);
-  intToEeprom(ROI_width, 61);
-  intToEeprom(SD_NUM_OF_SAMPLES, 67);
-  intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
-  intToEeprom(DISTANCES_ARRAY_SIZE, 85);
-  intToEeprom(MAX_DISTANCE, 91);
-  intToEeprom(MIN_DISTANCE, 97);
   strToEeprom(MQTT_WIFI_SSID, 155, MQTT_WIFI_SSID.length());
   strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
-  intToEeprom(SHUTDOWN_PIN1, 131);
-  intToEeprom(INTERRUPT_PIN1, 137);
-  intToEeprom(SHUTDOWN_PIN2, 143);
-  intToEeprom(INTERRUPT_PIN2, 149);
   intToEeprom(comparingNumInc, 155);
+  intToEeprom(comparingNumDec, 161);
+  intToEeprom(threshHoldInc, 167);
+  intToEeprom(threshHoldDec, 173);
 }
 // -----
 // -----
@@ -328,66 +228,12 @@ void intToEeprom(uint32_t param, int addr) {
 // -----
 void restoreEppromConfig() {
   Serial.println("Restore config. parameters from EEPROM");
-  MEASUREMENT_BUDGET_MS = EepromToInt(1);
-  Serial.print("MEASUREMENT_BUDGET_MS:");
-  Serial.println(MEASUREMENT_BUDGET_MS);
-  INTER_MEASUREMENT_PERIOD_MS = EepromToInt(7);
-  Serial.print("INTER_MEASUREMENT_PERIOD_MS:");
-  Serial.println(INTER_MEASUREMENT_PERIOD_MS);
-  DIST_THRESHOLD_MAX[0] = EepromToInt(13);
-  Serial.print("DIST_THRESHOLD_MAX[0]:");
-  Serial.println(DIST_THRESHOLD_MAX[0]);
-  DIST_THRESHOLD_MAX[1] = EepromToInt(19);
-  Serial.print("DIST_THRESHOLD_MAX[1]:");
-  Serial.println(DIST_THRESHOLD_MAX[1]);
-  center[0] = EepromToInt(25);
-  Serial.print("center[0]:");
-  Serial.println(center[0]);
-  center[1] = EepromToInt(31);
-  Serial.print("center[1]:");
-  Serial.println(center[1]);
-  center[2] = EepromToInt(103);
-  Serial.print("center[2]:");
-  Serial.println(center[2]);
-  center[3] = EepromToInt(109);
-  Serial.print("center[3]:");
-  Serial.println(center[3]);
-  if(EepromToInt(37) == 1)
-    VL53L1_DISTANCE_MODE = "short";
-  if(EepromToInt(37) == 2)
-    VL53L1_DISTANCE_MODE = "long";  
-  Serial.print("VL53L1_DISTANCE_MODE:");
-  Serial.println(VL53L1_DISTANCE_MODE);
   SAMPLE_TIME_MS = EepromToInt(43);
   Serial.print("SAMPLE_TIME_MS:");
-  Serial.println(SAMPLE_TIME_MS);
-  PEOPLE_COUNTER_PERIOD_MS = EepromToInt(49); 
-  Serial.print("PEOPLE_COUNTER_PERIOD_MS:");
-  Serial.println(PEOPLE_COUNTER_PERIOD_MS); 
-  ROI_height = EepromToInt(55); 
-  Serial.print("ROI_height:");
-  Serial.println(ROI_height); 
-  ROI_width = EepromToInt(61); 
-  Serial.print("ROI_width:");
-  Serial.println(ROI_width); 
-  SD_NUM_OF_SAMPLES = EepromToInt(67); 
-  Serial.print("SD_NUM_OF_SAMPLES:");
-  Serial.println(SD_NUM_OF_SAMPLES); 
-  SD_DEVIATION_THRESHOLD = EepromToInt(73); 
-  Serial.print("SD_DEVIATION_THRESHOLD:");
-  Serial.println(SD_DEVIATION_THRESHOLD);
+  Serial.println(SAMPLE_TIME_MS); 
   WIFI_MANAGER_ENABLE = EepromToInt(79); 
   Serial.print("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
-  DISTANCES_ARRAY_SIZE = EepromToInt(85); 
-  Serial.print("DISTANCES_ARRAY_SIZE:");
-  Serial.println(DISTANCES_ARRAY_SIZE);
-  MAX_DISTANCE = EepromToInt(91); 
-  Serial.print("MAX_DISTANCE:");
-  Serial.println(MAX_DISTANCE);
-  MIN_DISTANCE = EepromToInt(97);
-  Serial.print("MIN_DISTANCE:");
-  Serial.println(MIN_DISTANCE);
   MQTT_WIFI_SSID = EepromToStr(155); 
   MQTT_WIFI_SSID = MQTT_WIFI_SSID.substring(0, EEPPROM_STR_LEN);
   Serial.print("MQTT_WIFI_SSID:"); 
@@ -396,21 +242,18 @@ void restoreEppromConfig() {
   MQTT_WIFI_PASSWORD = MQTT_WIFI_PASSWORD.substring(0, EEPPROM_STR_LEN);
   Serial.print("MQTT_WIFI_PASSWORD:");
   Serial.println(MQTT_WIFI_PASSWORD);
-  SHUTDOWN_PIN1 = EepromToInt(131); 
-  Serial.print("SHUTDOWN_PIN1:");
-  Serial.println(SHUTDOWN_PIN1);
-  INTERRUPT_PIN1 = EepromToInt(137); 
-  Serial.print("INTERRUPT_PIN1:");
-  Serial.println(INTERRUPT_PIN1);
-  SHUTDOWN_PIN2 = EepromToInt(143); 
-  Serial.print("SHUTDOWN_PIN2:");
-  Serial.println(SHUTDOWN_PIN2);
-  INTERRUPT_PIN2 = EepromToInt(149); 
-  Serial.print("INTERRUPT_PIN2:");
-  Serial.println(INTERRUPT_PIN2);
   comparingNumInc = EepromToInt(155); 
   Serial.print("comparingNumInc:");
   Serial.println(comparingNumInc);
+  comparingNumDec = EepromToInt(161);     
+  Serial.print("comparingNumDec:");
+  Serial.println(comparingNumDec);
+  threshHoldInc = EepromToInt(167);
+  Serial.print("threshHoldInc:");
+  Serial.println(threshHoldInc);
+  threshHoldDec = EepromToInt(173);
+  Serial.print("threshHoldDec:");
+  Serial.println(threshHoldDec);
 }
 // -----
 // -----
@@ -529,9 +372,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   else if (topic_str == mqttSampleTimeTopic) {
     if (isValidNumber(message)) {
-      if ((message.toInt() != 9) | (message.toInt() != 10) | (message.toInt() != 12) | (message.toInt() != 15) | (message.toInt() != 20) | (message.toInt() != 40) | (message.toInt() != 60) | (message.toInt() != 100) | (message.toInt() != 200) | (message.toInt() != 400) | (message.toInt() != 800) | (message.toInt() != 1600) | (message.toInt() != 3200)) {
+      if ((message.toInt() != 9) & (message.toInt() != 10) & (message.toInt() != 12) & (message.toInt() != 15) & (message.toInt() != 20) & (message.toInt() != 40) & (message.toInt() != 60) & (message.toInt() != 100) & (message.toInt() != 200) & (message.toInt() != 400) & (message.toInt() != 800) & (message.toInt() != 1600) & (message.toInt() != 3200)) {
         Serial.print(mqttSampleTimeTopic);
         Serial.println("->ERROR");
+        client.publish(mqttSampleTimeTopic, "ERROR");
       }
       else {
         SAMPLE_TIME_MS = message.toInt();
@@ -548,14 +392,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }  
   else if (topic_str == mqttComparingNumIncTopic) {
     if (isValidNumber(message)) {
-      if ((message.toInt() < 1) | (message.toInt() > 39)) {
+      if ((message.toInt() < 1) & (message.toInt() > 39)) {
         Serial.print(mqttComparingNumIncTopic);
         Serial.println("->ERROR");
+        client.publish(mqttComparingNumIncTopic, "ERROR");
       }
       else {
         comparingNumInc = message.toInt();
         intToEeprom(comparingNumInc, 155);
-        Serial.print(mqttSampleTimeTopic);
+        Serial.print(mqttComparingNumIncTopic);
         Serial.println("->OK");
         client.publish(mqttComparingNumIncTopic, "OK");
       }   
@@ -565,6 +410,52 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }  
+  else if (topic_str == mqttComparingNumDecTopic) {
+    if (isValidNumber(message)) {
+      if ((message.toInt() < 1) & (message.toInt() > 39)) {
+        Serial.print(mqttComparingNumDecTopic);
+        Serial.println("->ERROR");
+        client.publish(mqttComparingNumDecTopic, "ERROR");
+      }
+      else {
+        comparingNumDec = message.toInt();
+        intToEeprom(comparingNumDec, 161);
+        Serial.print(mqttComparingNumDecTopic);
+        Serial.println("->OK");
+        client.publish(mqttComparingNumDecTopic, "OK");
+      }   
+      if (DEBUG) { 
+        Serial.print("mqttComparingNumDecTopic -> ");
+        Serial.println(comparingNumDec);
+      }
+    }
+  }  
+  else if (topic_str == mqttthreshHoldIncTopic) {
+    if (isValidNumber(message)) {
+        threshHoldInc = message.toInt();
+        intToEeprom(threshHoldInc, 167);
+        Serial.print(mqttthreshHoldIncTopic);
+        Serial.println("->OK");
+        client.publish(mqttthreshHoldIncTopic, "OK");
+      if (DEBUG) { 
+        Serial.print("mqttthreshHoldIncTopic -> ");
+        Serial.println(threshHoldInc);
+      }
+    }
+  } 
+  else if (topic_str == mqttthreshHoldDecTopic) {
+    if (isValidNumber(message)) {
+        threshHoldDec = message.toInt();
+        intToEeprom(threshHoldDec, 173);
+        Serial.print(mqttthreshHoldDecTopic);
+        Serial.println("->OK");
+        client.publish(mqttthreshHoldDecTopic, "OK"); 
+      if (DEBUG) { 
+        Serial.print("mqttthreshHoldDecTopic -> ");
+        Serial.println(threshHoldDec);
+      }
+    }
+  }
   else if (topic_str == mqttFlashUpdateTopic) {
     if (isValidNumber(message)) {
       if (message.toInt() == 1) {   
@@ -658,43 +549,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           Serial.println(message.toInt());
           Serial.println("Sensor configuration parameters:");
 
-          temp_str = "MEASUREMENT_BUDGET_MS: ";
-          temp_str.concat(String(MEASUREMENT_BUDGET_MS));
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nINTER_MEASUREMENT_PERIOD_MS: ");
-          temp_str.concat(String(INTER_MEASUREMENT_PERIOD_MS));
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nDIST_THRESHOLD_MAX: ");
-          temp_str.concat(String(DIST_THRESHOLD_MAX[0]));
-          temp_str.concat(',');
-          temp_str.concat(String(DIST_THRESHOLD_MAX[1]));
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nROI_CENTER: ");
-          temp_str.concat(String(center[0]));
-          temp_str.concat(',');
-          temp_str.concat(String(center[1]));
-          temp_str.concat(',');
-          temp_str.concat(String(center[2]));
-          temp_str.concat(',');
-          temp_str.concat(String(center[3]));
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nVL53L1_DISTANCE_MODE: ");
-          temp_str.concat(VL53L1_DISTANCE_MODE);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
 
           temp_str.concat("|\nSAMPLE_TIME_MS: ");
           temp_str.concat(SAMPLE_TIME_MS);
@@ -702,41 +556,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-          temp_str.concat("|\nPEOPLE_COUNTER_PERIOD_MS: ");
-          temp_str.concat(PEOPLE_COUNTER_PERIOD_MS);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nSD_NUM_OF_SAMPLES: ");
-          temp_str.concat(SD_NUM_OF_SAMPLES);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //Serial.println(temp_str);
-
-          temp_str.concat("|\nSD_DEVIATION_THRESHOLD: ");
-          temp_str.concat(SD_DEVIATION_THRESHOLD);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //erial.println(temp_str);
-
-          temp_str.concat("|\nDISTANCES_ARRAY_SIZE: ");
-          temp_str.concat(DISTANCES_ARRAY_SIZE);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //erial.println(temp_str);
-
-          temp_str.concat("|\nMAX_DISTANCE: ");
-          temp_str.concat(MAX_DISTANCE);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //erial.println(temp_str);
-
-          temp_str.concat("|\nMIN_DISTANCE: ");
-          temp_str.concat(MIN_DISTANCE);
-          //temp_str.toCharArray(temp, temp_str.length() + 1);
-          //client.publish(mqttGetSensorConfigTopic, temp);
-          //erial.println(temp_str);
 
           temp_str.concat("|\nWIFI_MANAGER_ENABLE: ");
           temp_str.concat(WIFI_MANAGER_ENABLE);
@@ -756,26 +575,30 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-      //    temp_str.concat("|\nSHUTDOWN_PIN1: ");
-      //    temp_str.concat(SHUTDOWN_PIN1);
+          temp_str.concat("|\comparingNumInc: ");
+          temp_str.concat(comparingNumInc);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-         // temp_str.concat("|\nINTERRUPT_PIN1: ");
-         // temp_str.concat(INTERRUPT_PIN1);
+          temp_str.concat("|\comparingNumDec: ");
+          temp_str.concat(comparingNumDec);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-         // temp_str.concat("|\nSHUTDOWN_PIN2: ");
-        //  temp_str.concat(SHUTDOWN_PIN2);
+          temp_str.concat("|\threshHoldInc: ");
+          temp_str.concat(threshHoldInc);
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
 
-         // temp_str.concat("|\nINTERRUPT_PIN2: ");
-         // temp_str.concat(INTERRUPT_PIN2);
+          temp_str.concat("|\threshHoldDec: ");
+          temp_str.concat(threshHoldDec);
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
           temp_str.toCharArray(temp, temp_str.length() + 1);
           client.publish(mqttGetSensorConfigTopic, temp);
           Serial.println("Publish sensorConfig");
@@ -812,6 +635,14 @@ void topicSubscribe() {
     client.subscribe(mqttWifiManagerEnableTopic); 
     Serial.println(mqttSensorWifiTopic);
     client.subscribe(mqttSensorWifiTopic);
+    Serial.println(mqttComparingNumIncTopic);
+    client.subscribe(mqttComparingNumIncTopic);
+    Serial.println(mqttComparingNumDecTopic);
+    client.subscribe(mqttComparingNumDecTopic);
+    Serial.println(mqttthreshHoldIncTopic);
+    client.subscribe(mqttthreshHoldIncTopic);
+    Serial.println(mqttthreshHoldDecTopic);
+    client.subscribe(mqttthreshHoldDecTopic);
     client.loop();
   }  
 }
@@ -1079,9 +910,9 @@ void setup() {
 
   
   //Detect if this is the first boot and initialize in EEPROM the sensor configuration parameters 
-  if (EEPROM.read(0) != 8) {
+  if (EEPROM.read(0) != 17) {
     Serial.println("Virgin boot");
-    EEPROM.write(eeprom_addr, 8);
+    EEPROM.write(eeprom_addr, 17);
     EEPROM.commit();
 
     initEepromConfigWrite();
@@ -1179,13 +1010,17 @@ void setup() {
   sprintf(mqttRestoreSensorConfigTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_RESTORE_SENSOR_CONFIG_TOPIC);
   sprintf(mqttWifiManagerEnableTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_WIFI_MANAGER_ENABLE_TOPIC);
   sprintf(mqttSensorWifiTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_SENSOR_WIFI_TOPIC);
+  sprintf(mqttComparingNumIncTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_COMPARING_NUM_INC_TOPIC);
+  sprintf(mqttComparingNumDecTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_COMPARING_NUM_DEC_TOPIC);
+  sprintf(mqttthreshHoldIncTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_THRESH_HOLD_INC_TOPIC);
+  sprintf(mqttthreshHoldDecTopic, "sensor/%s/%s", MAC_ADDRESS.c_str(), MQTT_THRESH_HOLD_DEC_TOPIC);
 
 
   if (DEBUG) Serial.print("Wait for MQTT broker...");
 
 
-  // Subscribe to topics and reconnect to MQTT server
-  mqttReconnect();
+  // Subscribe to topics and reconnect to MQTT server 
+  mqttReconnect(); 
   //------
   //------
 
@@ -1235,7 +1070,7 @@ void loop() {
   // Read sensor
   //------
   int i, j;
-
+  
   memset(rbuf, 0, N_READ);
   // Wire buffers are enough to read D6T-16L data (33bytes) with
   // MKR-WiFi1010 and Feather ESP32,
