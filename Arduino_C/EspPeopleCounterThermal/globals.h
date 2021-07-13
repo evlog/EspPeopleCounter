@@ -2,10 +2,12 @@ uint8_t EEPPROM_STR_LEN = 0;
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 int eeprom_addr = 0;
 
+uint32_t OCCUPANCY_COUNTER_PERIOD_MS = 120000;
+
 const char* REMOTE_PING_HOST = "www.google.com";
 
 unsigned long measPreviousMillisRanging = 0;
-unsigned long measPreviousMillisPeople = 0;
+unsigned long measPreviousMillisOccupancy = 0;
 unsigned long measPreviousMillisDataSerialReport = 0;
 unsigned long measPreviousMillisDeviationAlert = 0;
 unsigned long measPreviousMillisReboot = 0;
@@ -16,6 +18,8 @@ uint16_t peopleCounterVarPrev = 0;
 int zone = 0;
 
 uint16_t mqttDistance1, mqttDistance2;
+
+int16_t itemp_global = 0;
 
 // Define the path of the binary file for flash update
 String UPDATE_BINARY_FILE_PATH = "http://update.switchfi.co.za/firmware/counteresp32.bin"; //"http://evlog.zapto.org/subs/figures/test.bin";
@@ -94,8 +98,8 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-//const char* WIFI_SSID    = "ubx";
-//const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
+//const char* WIFI_SSID    = "Manyeleti";//"ubx";
+//const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
 
 // Mark config
 const char* WIFI_SSID    = "Phil UB";
@@ -249,6 +253,7 @@ int16_t seqData[40] = {0};
 bool  occuPix = 0;
 bool  occuPixFlag = false;
 uint8_t  resultOccupancy = 0;
+uint8_t  resultOccupancy_prev = 0;
 uint16_t  totalCount = 0;
 // -----
 // -----

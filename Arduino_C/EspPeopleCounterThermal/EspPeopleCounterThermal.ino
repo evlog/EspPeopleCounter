@@ -507,6 +507,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
   }
 
+
+
   else if (topic_str == mqttSensorWifiTopic) {
     if (message.length() > 2) {
       String wifiCredentials = message;
@@ -693,6 +695,18 @@ void mqttReconnect() {
   }
 }
 
+void publichOccupancy(void) {
+  char temp_occ[50];
+  String temp_str_occ;
+  Serial.print(mqttPeopleCountTopic);
+  temp_str_occ.concat(String(resultOccupancy));
+  temp_str_occ.concat(",");
+  temp_str_occ.concat(String(itemp_global));
+  temp_str_occ.toCharArray(temp_occ, temp_str_occ.length() + 1);
+  Serial.print("->");
+  Serial.println(temp_str_occ);
+  client.publish(mqttPeopleCountTopic, temp_occ);
+}
 
 // JUDGE_occupancy: judge occupancy
 bool judge_seatOccupancy(void) { 
@@ -1090,6 +1104,7 @@ void loop() {
 
   // 1st data is PTAT measurement (: Proportional To Absolute Temperature)
   int16_t itemp = conv8us_s16_le(rbuf, 0);
+  itemp_global = itemp;
   Serial.print("PTAT:");
   Serial.print(itemp / 10.0, 1);
   Serial.print(", Temperature:");
@@ -1108,7 +1123,21 @@ void loop() {
   judge_seatOccupancy(); //add
   Serial.print(", Occupancy:");
   Serial.println(resultOccupancy, 1); 
+  if (resultOccupancy != resultOccupancy_prev)
+    publichOccupancy();
+
+  resultOccupancy_prev = resultOccupancy;
   delay(samplingTime);
+  //------
+  //------
+
+  // Report occupancy status
+  //------
+  currentMillis = millis();
+  if ((currentMillis - measPreviousMillisOccupancy) >=  OCCUPANCY_COUNTER_PERIOD_MS) {
+    publichOccupancy();
+    measPreviousMillisOccupancy = millis();
+  }
   //------
   //------
 
