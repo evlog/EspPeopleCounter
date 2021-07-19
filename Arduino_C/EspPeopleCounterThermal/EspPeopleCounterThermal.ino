@@ -669,29 +669,33 @@ void mqttReconnect() {
   //------
   //------
   
-  
-  while (!client.connected()) {
-    counter++;
-    if (DEBUG) Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD)) {
-      if (DEBUG) {
-        Serial.println("MQTT connected");
-        Serial.println(MQTT_CLIENT);
+  if (WiFi.status() == WL_CONNECTED) {
+    while (!client.connected()) {
+      counter++;
+      if (DEBUG) Serial.print("Attempting MQTT connection...");
+      // Attempt to connect
+      if (client.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD)) {
+        if (DEBUG) {
+          Serial.println("MQTT connected");
+          Serial.println(MQTT_CLIENT);
+        }
+        topicSubscribe();
+      } 
+      
+      else {
+        if (DEBUG) Serial.print("failed, rc=");
+        if (DEBUG) Serial.print(client.state());
+        if (DEBUG) Serial.println(" try again in 5 seconds");
+        // Wait 5 seconds before retrying
+        delay(5000);
       }
-      topicSubscribe();
-    } 
-    
-    else {
-      if (DEBUG) Serial.print("failed, rc=");
-      if (DEBUG) Serial.print(client.state());
-      if (DEBUG) Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      if (counter == 5) { // reboot and reconnectr to wifi if MQTT connection is not possible
+        ESP.restart();
+      }
     }
-    if (counter == 5) { // reboot and reconnectr to wifi if MQTT connection is not possible
-      ESP.restart();
-    }
+  }
+  else {
+    ESP.restart();
   }
 }
 
@@ -940,6 +944,7 @@ void setup() {
 
   int x = 1;
 
+  WiFi.disconnect(true);
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
   if (WIFI_MANAGER_ENABLE == 0) {
     Serial.print("Connecting to ");
