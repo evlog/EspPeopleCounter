@@ -166,14 +166,14 @@ uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0;
 
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 33;
 
-uint32_t DISTANCES_ARRAY_SIZE = 10;
+uint32_t DISTANCES_ARRAY_SIZE = 4;
 
-uint32_t MAX_DISTANCE = 2000;
+uint32_t MAX_DISTANCE = 33;
 
 uint32_t MIN_DISTANCE = 0;
 
-String MQTT_WIFI_SSID = "testSsid";
-String MQTT_WIFI_PASSWORD = "12345678";
+String MQTT_WIFI_SSID = "Intuitive";
+String MQTT_WIFI_PASSWORD = "SensorS123";
 
 // Define distance metering mode of the sensor (short or long, default is long)
 String  VL53L1_DISTANCE_MODE = "long";
@@ -182,10 +182,10 @@ char peopleCounterArray[50];
 
 
 //Optional interrupt and shutdown pins
-static int  SHUTDOWN_PIN1 = 2;    
-static int  INTERRUPT_PIN1 = 3;
-static int  SHUTDOWN_PIN2 = 4;    
-static int  INTERRUPT_PIN2 = 5;
+static int  SHUTDOWN_PIN1 = 25;    
+static int  INTERRUPT_PIN1 = 25;
+static int  SHUTDOWN_PIN2 = 25;    
+static int  INTERRUPT_PIN2 = 25;
 
 
 static int NOBODY = 0;
@@ -196,7 +196,7 @@ static int UPPER_RIGHT = 2;
 static int LOWER_LEFT = 3;
 
 
-uint32_t DIST_THRESHOLD_MAX[] = {1850, 1850};   // treshold of the two zones
+uint32_t DIST_THRESHOLD_MAX[] = {1950, 1950};   // treshold of the two zones
 
 static int PathTrack[] = {0,0,0,0};
 static int PathTrackFillingSize = 1; // init this to 1 as we start from state where nobody is any of the zones
