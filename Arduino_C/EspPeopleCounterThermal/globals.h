@@ -7,7 +7,7 @@ int eeprom_addr = 0;
 
 uint32_t OCCUPANCY_COUNTER_PERIOD_MS = 120000;
 
-const char* REMOTE_PING_HOST = "www.google.com";
+const char* REMOTE_PING_HOST = "mqtt.switchfi.co.za";
 
 unsigned long measPreviousMillisRanging = 0;
 unsigned long measPreviousMillisOccupancy = 0;
