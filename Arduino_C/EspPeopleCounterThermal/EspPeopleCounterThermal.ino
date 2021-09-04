@@ -4,7 +4,7 @@ extern "C" {
 #include "esp_wifi.h"
 }
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
-#include <PubSubClient.h> // Library for MQTT
+#include <PubSubClient.h> // Library for MQTT 
 #include <Wire.h>
 #include <StringSplitter.h>
 #include "ESP32HTTPUpdate.h"
