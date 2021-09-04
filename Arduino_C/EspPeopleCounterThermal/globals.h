@@ -1,3 +1,6 @@
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
 uint8_t EEPPROM_STR_LEN = 0;
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 int eeprom_addr = 0;
@@ -11,6 +14,7 @@ unsigned long measPreviousMillisOccupancy = 0;
 unsigned long measPreviousMillisDataSerialReport = 0;
 unsigned long measPreviousMillisDeviationAlert = 0;
 unsigned long measPreviousMillisReboot = 0;
+
 
 uint16_t peopleCounter = 0;
 uint16_t peopleCounterVar = 0;

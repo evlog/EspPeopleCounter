@@ -9,6 +9,7 @@ extern "C" {
 #include <StringSplitter.h>
 #include "ESP32HTTPUpdate.h"
 #include <EEPROM.h>
+#include "ESP32Ping.h"
 #include "globals.h"
 // ----- 
 // -----
@@ -902,6 +903,31 @@ void configI2cParam() {
     Wire.endTransmission();            // I2C repeated start for read    
 }
 
+
+void checkWiFi() {
+  if (WiFi.status() != WL_CONNECTED) {   
+    // Ping Google to check wifi connection
+    if(Ping.ping(REMOTE_PING_HOST)) {
+      Serial.println("Ping host success.");
+      Serial.print("Ping average time: " );
+      Serial.print(Ping.averageTime());
+      Serial.println(" ms");
+    } 
+    else {
+      Serial.println("Ping host error.");
+      ESP.restart();
+    }
+  }
+}
+
+// Check WiFi connection timer
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  checkWiFi();
+  portEXIT_CRITICAL_ISR(&timerMux);
+ 
+}
+
 void setup() {
   int i;
   
@@ -941,6 +967,14 @@ void setup() {
 
   Serial.println("WIFI_MANAGER_ENABLE:");
   Serial.println(WIFI_MANAGER_ENABLE);
+
+  // Enable timer based interrupt (2 min.)
+  //---  
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 120000000, true);
+  timerAlarmEnable(timer);
+  //---  
 
   int x = 1;
 
@@ -1066,13 +1100,25 @@ void loop() {
 
   client.loop();
 
-  // If reset connection is lost reset after 20sec.
+  // If WiFI connection is lost reset after 20sec.
   //------
   if (WiFi.status() != WL_CONNECTED) {
     delay(20000);
 
     if (WiFi.status() != WL_CONNECTED)
       ESP.restart();
+  }
+  //------
+  //------
+
+  // Reboot the device every 12hrs
+  //------
+  currentMillis = millis();
+  if ((currentMillis - measPreviousMillisReboot) >=  43200000) {
+    Serial.print("Reboot every 12hrs: ");
+
+    measPreviousMillisReboot = millis();
+    ESP.restart();
   }
   //------
   //------
