@@ -5,6 +5,8 @@ uint8_t EEPPROM_STR_LEN = 0;
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 int eeprom_addr = 0;
 
+bool checkWifiFlag = false;
+
 uint32_t OCCUPANCY_COUNTER_PERIOD_MS = 120000;
 
 const char* REMOTE_PING_HOST = "mqtt.switchfi.co.za";

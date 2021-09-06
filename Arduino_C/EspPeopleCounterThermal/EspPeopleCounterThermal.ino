@@ -1,7 +1,7 @@
 // Define libraries 
 // -----
 extern "C" {
-#include "esp_wifi.h"
+#include "esp_wifi.h" 
 }
 #include <WiFiManager.h> // Library to handle WiFi AP configuration portal 
 #include <PubSubClient.h> // Library for MQTT 
@@ -12,7 +12,7 @@ extern "C" {
 #include "ESP32Ping.h"
 #include "globals.h"
 // ----- 
-// -----
+// ----- 
 
 
 
@@ -710,6 +710,7 @@ void publichOccupancy(void) {
   temp_str_occ.toCharArray(temp_occ, temp_str_occ.length() + 1);
   Serial.print("->");
   Serial.println(temp_str_occ);
+  Serial.print("***");
   client.publish(mqttPeopleCountTopic, temp_occ);
 }
 
@@ -905,7 +906,7 @@ void configI2cParam() {
 
 
 void checkWiFi() {
-  if (WiFi.status() != WL_CONNECTED) {   
+  if (WiFi.status() == WL_CONNECTED) {   
     // Ping Google to check wifi connection
     if(Ping.ping(REMOTE_PING_HOST)) {
       Serial.println("Ping host success.");
@@ -918,12 +919,16 @@ void checkWiFi() {
       ESP.restart();
     }
   }
+  else {
+    Serial.println("Wifi connection lost.");
+    ESP.restart();
+  }
 }
 
 // Check WiFi connection timer
 void IRAM_ATTR onTimer() {
   portENTER_CRITICAL_ISR(&timerMux);
-  checkWiFi();
+  checkWifiFlag = true;
   portEXIT_CRITICAL_ISR(&timerMux);
  
 }
@@ -983,6 +988,7 @@ void setup() {
   if (WIFI_MANAGER_ENABLE == 0) {
     Serial.print("Connecting to ");
     Serial.println(WIFI_SSID);
+    Serial.println(WIFI_PASSWORD);
 
     delay(2000);
 
@@ -1085,6 +1091,9 @@ void setup() {
   //------
   //------
 
+  // Check wifi status
+  checkWiFi();
+
 }
 
 void loop() {
@@ -1110,6 +1119,11 @@ void loop() {
   }
   //------
   //------
+
+  if (checkWifiFlag) {
+    checkWifiFlag = false;
+    checkWiFi();
+  }
 
   // Reboot the device every 12hrs
   //------
