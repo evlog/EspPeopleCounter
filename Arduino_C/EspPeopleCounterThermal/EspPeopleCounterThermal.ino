@@ -904,7 +904,7 @@ void configI2cParam() {
     Wire.endTransmission();            // I2C repeated start for read    
 }
 
-
+// Check WiFi by sending a ping to an external server
 void checkWiFi() {
   if (WiFi.status() == WL_CONNECTED) {   
     // Ping Google to check wifi connection
@@ -1120,10 +1120,14 @@ void loop() {
   //------
   //------
 
+  // Check if internet connection is alive
+  //------
   if (checkWifiFlag) {
     checkWifiFlag = false;
     checkWiFi();
   }
+  //------
+  //------
 
   // Reboot the device every 12hrs
   //------
