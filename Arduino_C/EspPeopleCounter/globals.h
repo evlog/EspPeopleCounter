@@ -1,3 +1,8 @@
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+bool checkWifiFlag = false;
+
 uint8_t EEPPROM_STR_LEN = 0;
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
 int eeprom_addr = 0;

@@ -15,7 +15,7 @@ extern "C" {
 //#include <ESP8266HTTPClient.h>
 #include "ESP32HTTPUpdate.h"
 #include <EEPROM.h>
-//#include "ESP32Ping.h"
+#include "ESP32Ping.h"
 #include "globals.h"
 // ----- 
 // -----
@@ -1421,7 +1421,34 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
   return(peopleCounter);     
 }
 
+// Check WiFi by sending a ping to an external server
+void checkWiFi() {
+  if (WiFi.status() == WL_CONNECTED) {   
+    // Ping Google to check wifi connection
+    if(Ping.ping(REMOTE_PING_HOST)) {
+      Serial.println("Ping host success.");
+      Serial.print("Ping average time: " );
+      Serial.print(Ping.averageTime());
+      Serial.println(" ms");
+    } 
+    else {
+      Serial.println("Ping host error.");
+      ESP.restart();
+    }
+  }
+  else {
+    Serial.println("Wifi connection lost.");
+    ESP.restart();
+  }
+}
 
+// Check WiFi connection timer
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  checkWifiFlag = true;
+  portEXIT_CRITICAL_ISR(&timerMux);
+ 
+}
 
 
 void setup() {
@@ -1451,7 +1478,13 @@ void setup() {
   pinMode(INTERRUPT_PIN2, OUTPUT);
   digitalWrite(INTERRUPT_PIN2, LOW);
 
-  
+  // Enable timer based interrupt (2 min.)
+  //---  
+  timer = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 120000000, true);
+  timerAlarmEnable(timer);
+  //---    
 
   // Initialize EPPROM memory
   EEPROM.begin(512);
@@ -1647,6 +1680,9 @@ void setup() {
   if (distanceSensor.init() == false)
     Serial.println("Sensor online!");
 
+  // Check wifi status
+  checkWiFi();
+
 }
 
 void loop() {
@@ -1841,6 +1877,15 @@ void loop() {
     //Serial.println(peopleCounterVar);
 
     measPreviousMillisDataSerialReport = millis();
+  }
+  //------
+  //------
+
+  // Check if internet connection is alive
+  //------
+  if (checkWifiFlag) {
+    checkWifiFlag = false;
+    checkWiFi();
   }
   //------
   //------
