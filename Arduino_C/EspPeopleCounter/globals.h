@@ -1,7 +1,13 @@
+const char* FIRMWARE_VERSION = "firmwarev1";
+
+// Timer ping conenctivity check interrupt
+// -----
 hw_timer_t * timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 bool checkWifiFlag = false;
+// -----
+// -----
 
 uint8_t EEPPROM_STR_LEN = 0;
 const bool DEBUG = true; // Boolean variable used to enable debugging messages
@@ -140,8 +146,8 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-//const char* WIFI_SSID    = "Manyeleti";//"ubx";
-//const char* WIFI_PASSWORD = "16148279";//"GqpZvmK8@r5yL#AP";
+//const char* WIFI_SSID    = "ubx";
+//const char* WIFI_PASSWORD = "GqpZvmK8@r5yL#AP";
 
 // Mark config
 const char* WIFI_SSID    = "Intuitive";

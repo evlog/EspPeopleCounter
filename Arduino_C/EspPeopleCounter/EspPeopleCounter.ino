@@ -23,7 +23,8 @@ extern "C" {
 
 
 
-SFEVL53L1X distanceSensor(Wire);
+SFEVL53L1X distanceSensor1(Wire);
+SFEVL53L1X distanceSensor2(Wire);
 
 
 // Function to return random MQTT_CLIENT name
@@ -490,30 +491,59 @@ boolean isValidNumber(String str){
    return false;
 } 
 
-// vl53l1 configruation and variables
-uint16_t vl531Init(uint8_t zone) {  
+// vl53l1 sensor 1 configruation and variables
+uint16_t vl531Init_1(uint8_t zone) {  
   
   uint16_t distance;
   
   //if (distanceSensor.init() == false); //  check init function in the library
   //distanceSensor.init();
-  distanceSensor.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
+  distanceSensor1.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
 
   //Serial.println("Center:");
   //Serial.println("center[zone]);
 
   if (VL53L1_DISTANCE_MODE == "short")
-    distanceSensor.setDistanceModeShort();
+    distanceSensor1.setDistanceModeShort();
   else if (VL53L1_DISTANCE_MODE == "long")
-    distanceSensor.setDistanceModeLong();
+    distanceSensor1.setDistanceModeLong();
     
   delay(MAX_DISTANCE);
-  distanceSensor.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
-  distanceSensor.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
-  distanceSensor.startRanging(); //Write configuration bytes to initiate measurement
-  distance = distanceSensor.getDistance(); //Get the result of the measurement from the sensor
-  distanceSensor.stopRanging();
-  distanceSensor.clearInterrupt();
+  distanceSensor1.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
+  distanceSensor1.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
+  distanceSensor1.startRanging(); //Write configuration bytes to initiate measurement
+  distance = distanceSensor1.getDistance(); //Get the result of the measurement from the sensor
+  distanceSensor1.stopRanging();
+  distanceSensor1.clearInterrupt();
+
+  return distance;
+  
+}
+
+// vl53l1 sensor 2 configruation and variables
+uint16_t vl531Init_2(uint8_t zone) {  
+  
+  uint16_t distance;
+  
+  //if (distanceSensor.init() == false); //  check init function in the library
+  //distanceSensor.init();
+  distanceSensor2.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
+
+  //Serial.println("Center:");
+  //Serial.println("center[zone]);
+
+  if (VL53L1_DISTANCE_MODE == "short")
+    distanceSensor2.setDistanceModeShort();
+  else if (VL53L1_DISTANCE_MODE == "long")
+    distanceSensor2.setDistanceModeLong();
+    
+  delay(MAX_DISTANCE);
+  distanceSensor2.setTimingBudgetInMs(MEASUREMENT_BUDGET_MS);
+  distanceSensor2.setIntermeasurementPeriod(INTER_MEASUREMENT_PERIOD_MS);
+  distanceSensor2.startRanging(); //Write configuration bytes to initiate measurement
+  distance = distanceSensor2.getDistance(); //Get the result of the measurement from the sensor
+  distanceSensor2.stopRanging();
+  distanceSensor2.clearInterrupt();
 
   return distance;
   
@@ -527,7 +557,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   p[length] = NULL;
   String message(p);
   String topic_str(topic);
-  char temp[400];
+  char temp[500];
   String temp_str;
   uint32_t tmp_int;
 
@@ -948,11 +978,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if (message.toInt() == 1) {   
         //client.publish(mqttGetSensorConfigTopic, "OK");
         if (DEBUG) { 
+
           Serial.print("mqttGetSensorConfigTopic -> ");
           Serial.println(message.toInt());
           Serial.println("Sensor configuration parameters:");
 
-          temp_str = "MEASUREMENT_BUDGET_MS: ";
+          temp_str = "FIRMWARE_VERSION: ";
+          temp_str.concat(String(FIRMWARE_VERSION));
+          //temp_str.toCharArray(temp, temp_str.length() + 1);
+          //client.publish(mqttGetSensorConfigTopic, temp);
+          //Serial.println(temp_str);
+
+          temp_str.concat("|\nMEASUREMENT_BUDGET_MS: ");
           temp_str.concat(String(MEASUREMENT_BUDGET_MS));
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
@@ -1677,7 +1714,7 @@ void setup() {
 
   Serial.println("VL53L1X Quick Test");
 
-  if (distanceSensor.init() == false)
+  if (distanceSensor1.init() == false)
     Serial.println("Sensor online!");
 
   // Check wifi status
@@ -1720,7 +1757,7 @@ void loop() {
 
   // inject the new ranged distance in the people counting algorithm
   //------
-  RangingData = vl531Init(zone);
+  RangingData = vl531Init_1(zone);
 
   client.loop();
   
