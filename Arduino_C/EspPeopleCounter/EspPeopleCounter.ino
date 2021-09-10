@@ -1260,7 +1260,7 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
     if (DistancesTableSize[zone] < DISTANCES_ARRAY_SIZE) {
       Distances_6[zone][DistancesTableSize[zone]] = Distance;
       DistancesTableSize[zone] ++;
-    }
+    } 
     else {
       for (i=1; i<DISTANCES_ARRAY_SIZE; i++)
         Distances_6[zone][i-1] = Distances_6[zone][i];
