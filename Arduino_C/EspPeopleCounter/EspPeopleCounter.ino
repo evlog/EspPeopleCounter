@@ -93,14 +93,14 @@ void mqttForceInitConfig() {
   DIST_THRESHOLD_MAX[1] = 1950;
   intToEeprom(DIST_THRESHOLD_MAX[0], 13);
   intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-  center[0] = 93;
-  center[1] = 229;
-  center[2] = 165;
-  center[3] = 29;
-  intToEeprom(center[0], 25);
-  intToEeprom(center[1], 31);
-  intToEeprom(center[2], 103);
-  intToEeprom(center[3], 109);
+  center_1[0] = 93;
+  center_1[1] = 229;
+  center_2[0] = 165;
+  center_2[1] = 29;
+  intToEeprom(center_1[0], 25);
+  intToEeprom(center_1[1], 31);
+  intToEeprom(center_2[0], 103);
+  intToEeprom(center_2[1], 109);
   VL53L1_DISTANCE_MODE = "long";
   if(VL53L1_DISTANCE_MODE == "short")
     intToEeprom(1, 37);
@@ -110,10 +110,10 @@ void mqttForceInitConfig() {
   intToEeprom(RANGING_PERIOD_MS, 43); 
   PEOPLE_COUNTER_PERIOD_MS = 120000;
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
-  ROI_height = 8;
-  intToEeprom(ROI_height, 55);
-  ROI_width = 8;
-  intToEeprom(ROI_width, 61);
+  ROI_height_1 = 8;
+  intToEeprom(ROI_height_1, 55);
+  ROI_width_1 = 8;
+  intToEeprom(ROI_width_1, 61);
   SD_NUM_OF_SAMPLES = 10;
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   SD_DEVIATION_THRESHOLD = 5;
@@ -138,6 +138,10 @@ void mqttForceInitConfig() {
   intToEeprom(SHUTDOWN_PIN2, 143);
   INTERRUPT_PIN2 = 25;
   intToEeprom(INTERRUPT_PIN2, 149);
+  ROI_height_2 = 8;
+  intToEeprom(ROI_height_2, 155);
+  ROI_width_2 = 8;
+  intToEeprom(ROI_width_2, 161);
 }
 // -----
 // -----
@@ -149,10 +153,10 @@ void initEepromConfigWrite() {
   intToEeprom(INTER_MEASUREMENT_PERIOD_MS, 7);
   intToEeprom(DIST_THRESHOLD_MAX[0], 13);
   intToEeprom(DIST_THRESHOLD_MAX[1], 19);
-  intToEeprom(center[0], 25);
-  intToEeprom(center[1], 31);
-  intToEeprom(center[2], 103);
-  intToEeprom(center[3], 109);
+  intToEeprom(center_1[0], 25);
+  intToEeprom(center_1[1], 31);
+  intToEeprom(center_2[0], 103);
+  intToEeprom(center_2[1], 109);
   if(VL53L1_DISTANCE_MODE == "short")
     intToEeprom(1, 37);
   else if(VL53L1_DISTANCE_MODE == "long")
@@ -161,8 +165,8 @@ void initEepromConfigWrite() {
   Serial.println("**");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS);
   intToEeprom(PEOPLE_COUNTER_PERIOD_MS, 49);
-  intToEeprom(ROI_height, 55);
-  intToEeprom(ROI_width, 61);
+  intToEeprom(ROI_height_1, 55);
+  intToEeprom(ROI_width_1, 61);
   intToEeprom(SD_NUM_OF_SAMPLES, 67);
   intToEeprom(SD_DEVIATION_THRESHOLD, 73);
   intToEeprom(WIFI_MANAGER_ENABLE, 79);
@@ -175,6 +179,8 @@ void initEepromConfigWrite() {
   intToEeprom(INTERRUPT_PIN1, 137);
   intToEeprom(SHUTDOWN_PIN2, 143);
   intToEeprom(INTERRUPT_PIN2, 149);
+  intToEeprom(ROI_height_2, 155);
+  intToEeprom(ROI_width_2, 161);
 }
 // -----
 // -----
@@ -349,18 +355,18 @@ void restoreEppromConfig() {
   DIST_THRESHOLD_MAX[1] = EepromToInt(19);
   Serial.print("DIST_THRESHOLD_MAX[1]:");
   Serial.println(DIST_THRESHOLD_MAX[1]);
-  center[0] = EepromToInt(25);
-  Serial.print("center[0]:");
-  Serial.println(center[0]);
-  center[1] = EepromToInt(31);
-  Serial.print("center[1]:");
-  Serial.println(center[1]);
-  center[2] = EepromToInt(103);
-  Serial.print("center[2]:");
-  Serial.println(center[2]);
-  center[3] = EepromToInt(109);
-  Serial.print("center[3]:");
-  Serial.println(center[3]);
+  center_1[0] = EepromToInt(25);
+  Serial.print("center_1[0]:");
+  Serial.println(center_1[0]);
+  center_1[1] = EepromToInt(31);
+  Serial.print("center_1[1]:");
+  Serial.println(center_1[1]);
+  center_2[0] = EepromToInt(103);
+  Serial.print("center_2[0]:");
+  Serial.println(center_2[0]);
+  center_2[1] = EepromToInt(109);
+  Serial.print("center_2[1]:");
+  Serial.println(center_2[1]);
   if(EepromToInt(37) == 1)
     VL53L1_DISTANCE_MODE = "short";
   if(EepromToInt(37) == 2)
@@ -373,12 +379,18 @@ void restoreEppromConfig() {
   PEOPLE_COUNTER_PERIOD_MS = EepromToInt(49); 
   Serial.print("PEOPLE_COUNTER_PERIOD_MS:");
   Serial.println(PEOPLE_COUNTER_PERIOD_MS); 
-  ROI_height = EepromToInt(55); 
-  Serial.print("ROI_height:");
-  Serial.println(ROI_height); 
-  ROI_width = EepromToInt(61); 
-  Serial.print("ROI_width:");
-  Serial.println(ROI_width); 
+  ROI_height_1 = EepromToInt(55); 
+  Serial.print("ROI_height_1:");
+  Serial.println(ROI_height_1); 
+  ROI_width_1 = EepromToInt(61); 
+  Serial.print("ROI_width_1:");
+  Serial.println(ROI_width_1); 
+  ROI_height_2 = EepromToInt(155); 
+  Serial.print("ROI_height_2:");
+  Serial.println(ROI_height_2); 
+  ROI_width_2 = EepromToInt(161); 
+  Serial.print("ROI_width_2:");
+  Serial.println(ROI_width_2); 
   SD_NUM_OF_SAMPLES = EepromToInt(67); 
   Serial.print("SD_NUM_OF_SAMPLES:");
   Serial.println(SD_NUM_OF_SAMPLES); 
@@ -497,8 +509,8 @@ uint16_t vl531Init_1(uint8_t zone) {
   uint16_t distance;
   
   //if (distanceSensor.init() == false); //  check init function in the library
-  //distanceSensor.init();
-  distanceSensor1.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
+  //distanceSensor.init();_
+  distanceSensor1.setROI(ROI_height_1, ROI_width_1, center_1[zone]);  // first value: height of the zone, second value: width of the zone
 
   //Serial.println("Center:");
   //Serial.println("center[zone]);
@@ -527,7 +539,7 @@ uint16_t vl531Init_2(uint8_t zone) {
   
   //if (distanceSensor.init() == false); //  check init function in the library
   //distanceSensor.init();
-  distanceSensor2.setROI(ROI_height, ROI_width, center[zone]);  // first value: height of the zone, second value: width of the zone
+  distanceSensor2.setROI(ROI_height_2, ROI_width_2, center_2[zone]);  // first value: height of the zone, second value: width of the zone
 
   //Serial.println("Center:");
   //Serial.println("center[zone]);
@@ -723,24 +735,32 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
       p5 = splitterRoi1->getItemAtIndex(0); 
       p6 = splitterRoi1->getItemAtIndex(1); 
 
-      ROI_height = p0.toInt();
-      intToEeprom(ROI_height, 55);
-      ROI_width = p1.toInt();
-      intToEeprom(ROI_width, 61);
-      center[0] = p2.toInt();
-      intToEeprom(center[0], 25);
-      center[1] = p3.toInt();
-      intToEeprom(center[1], 31);
-      center[2] = p5.toInt();
-      intToEeprom(center[2], 103);
-      center[3] = p6.toInt();
-      intToEeprom(center[3], 109);
-      Serial.println(ROI_height);  
-      Serial.println(ROI_width);
-      Serial.println(center[0]);
-      Serial.println(center[1]);
-      Serial.println(center[2]);
-      Serial.println(center[3]);
+
+      ROI_height_1 = p0.toInt();
+      intToEeprom(ROI_height_1, 55);
+      ROI_width_1 = p1.toInt();
+      intToEeprom(ROI_width_1, 61);
+      center_1[0] = p2.toInt();
+      intToEeprom(center_1[0], 25);
+      center_1[1] = p3.toInt();
+      intToEeprom(center_1[1], 31);
+      ROI_height_2 = p0.toInt();
+      intToEeprom(ROI_height_2, 155);
+      ROI_width_2 = p1.toInt();
+      intToEeprom(ROI_width_2, 161);
+      center_2[0] = p5.toInt();
+      intToEeprom(center_2[0], 103);
+      center_2[1] = p6.toInt();
+      intToEeprom(center_2[1], 109);
+      Serial.println(ROI_height_1);  
+      Serial.println(ROI_width_1);
+      Serial.println(center_1[0]);
+      Serial.println(center_1[1]);
+      Serial.println(ROI_height_2);  
+      Serial.println(ROI_width_2);
+      Serial.println(center_2[0]);
+      Serial.println(center_2[1]);
+
 
       //vl531Init(1); // Initialize sensor for zone 1
       client.publish(mqttRoiConfigTopic, "OK");  
@@ -1010,13 +1030,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
           //Serial.println(temp_str);
 
           temp_str.concat("|\nROI_CENTER: ");
-          temp_str.concat(String(center[0]));
+          temp_str.concat(String(center_1[0]));
           temp_str.concat(',');
-          temp_str.concat(String(center[1]));
+          temp_str.concat(String(center_1[1]));
           temp_str.concat(',');
-          temp_str.concat(String(center[2]));
+          temp_str.concat(String(center_2[0]));
           temp_str.concat(',');
-          temp_str.concat(String(center[3]));
+          temp_str.concat(String(center_2[1]));
           //temp_str.toCharArray(temp, temp_str.length() + 1);
           //client.publish(mqttGetSensorConfigTopic, temp);
           //Serial.println(temp_str);
@@ -1363,7 +1383,7 @@ uint16_t ProcessPeopleCountingData(int16_t Distance, uint8_t zone) {
     }
   }
 
-  if (MinDistance < DIST_THRESHOLD_MAX[Zone]) {
+  if (MinDistance < DIST_THRESHOLD_MAX[Zone_1]) {
     // Someone is in !
     CurrentZoneStatus = SOMEONE;
   }
