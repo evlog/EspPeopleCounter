@@ -146,12 +146,12 @@ void mqttCallback(char*, byte*, unsigned int); // This function is called when a
 WiFiClient wifiClient;
 PubSubClient client(MQTT_ADDRESS, 1883, mqttCallback, wifiClient);
 
-//const char* WIFI_SSID    = "Phil UB";//"Manyeleti";//"ubx";
-//const char* WIFI_PASSWORD = "12312C64400151";//"16148279";//"GqpZvmK8@r5yL#AP";
+const char* WIFI_SSID    = "Phil UB";//"Manyeleti";//"ubx";
+const char* WIFI_PASSWORD = "12312C64400151";//"16148279";//"GqpZvmK8@r5yL#AP";
 
 // Mark config
-const char* WIFI_SSID    = "Intuitive";
-const char* WIFI_PASSWORD = "SensorS123";
+//const char* WIFI_SSID    = "Intuitive";
+//const char* WIFI_PASSWORD = "SensorS123";
 
 int WIFI_MANAGER_ENABLE = 0;
 //------
@@ -194,9 +194,9 @@ char peopleCounterArray[50];
 
 //Optional interrupt and shutdown pins
 static int  SHUTDOWN_PIN1 = 25;    
-static int  INTERRUPT_PIN1 = 25;
-static int  SHUTDOWN_PIN2 = 25;    
-static int  INTERRUPT_PIN2 = 25;
+static int  INTERRUPT_PIN1 = 26;
+static int  SHUTDOWN_PIN2 = 19;    
+static int  INTERRUPT_PIN2 = 18;
 
 
 static int NOBODY = 0;
@@ -216,7 +216,7 @@ static int RightPreviousStatus = NOBODY;
 static int PeopleCount = 0;
 
 // Define ROI config1
-static int center_1[2] = {93,229}; /* center of the two zones */  
+static int center_1[2] = {93, 229}; /* center of the two zones */  
 static int Zone_1 = 0;
 static int PplCounter_1 = 0;
 
@@ -224,7 +224,7 @@ static int ROI_height_1 = 8;
 static int ROI_width_1 = 8;
 
 // Define ROI config2
-static int center_2[2] = {165,29}; /* center of the two zones */  
+static int center_2[2] = {93, 229}; /* center of the two zones */  
 static int Zone_2 = 0;
 static int PplCounter = 0;
 

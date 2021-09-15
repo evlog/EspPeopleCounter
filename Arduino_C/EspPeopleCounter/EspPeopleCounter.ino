@@ -132,11 +132,11 @@ void mqttForceInitConfig() {
   strToEeprom(MQTT_WIFI_PASSWORD, 177, MQTT_WIFI_PASSWORD.length());
   SHUTDOWN_PIN1 = 25;
   intToEeprom(SHUTDOWN_PIN1, 131);
-  INTERRUPT_PIN1 = 25;
+  INTERRUPT_PIN1 = 26;
   intToEeprom(INTERRUPT_PIN1, 137);
-  SHUTDOWN_PIN2 = 25;
+  SHUTDOWN_PIN2 = 19;
   intToEeprom(SHUTDOWN_PIN2, 143);
-  INTERRUPT_PIN2 = 25;
+  INTERRUPT_PIN2 = 18;
   intToEeprom(INTERRUPT_PIN2, 149);
   ROI_height_2 = 8;
   intToEeprom(ROI_height_2, 155);
@@ -1507,6 +1507,27 @@ void IRAM_ATTR onTimer() {
  
 }
 
+void i2cAddressScanner() {
+  byte count = 0;
+  Serial.println("I2C address scanner");
+  for (byte i = 1; i < 120; i++) {
+    Wire.beginTransmission (i);
+    if (Wire.endTransmission () == 0) {
+      Serial.print ("Found address: ");
+      Serial.print (i, DEC);
+      Serial.print (" (0x");
+      Serial.print (i, HEX);
+      Serial.println (")");
+      count++;
+      delay (1);  // maybe unneeded?
+    } // end of good response
+  } // end of for loop
+  
+  Serial.println ("Done.");
+  Serial.print ("Found ");
+  Serial.print (count, DEC);
+  Serial.println (" device(s).");  
+}
 
 void setup() {
   int i;
@@ -1734,11 +1755,30 @@ void setup() {
 
   Serial.println("VL53L1X Quick Test");
 
-  if (distanceSensor1.init() == false)
-    Serial.println("Sensor online!");
+  digitalWrite(SHUTDOWN_PIN1, HIGH);
+  if (distanceSensor1.begin() == 0) {
+    Serial.println("Sensor1 online!");
+    distanceSensor1.setI2CAddress(0x29); // default
+    Serial.print("Sensor1 I2C address: ");
+    Serial.println(distanceSensor1.getI2CAddress());
+  }
+  else
+    Serial.println("Sensor1 offline!");
+
+  digitalWrite(SHUTDOWN_PIN2, HIGH);
+  if (distanceSensor2.begin() == 0) {
+    Serial.println("Sensor2 online!");
+    distanceSensor2.setI2CAddress(0x30);
+    Serial.print("Sensor2 I2C address: ");
+    Serial.println(distanceSensor2.getI2CAddress());
+  }
+  else
+    Serial.println("Sensor2 offline!");
 
   // Check wifi status
   checkWiFi();
+
+  i2cAddressScanner();
 
 }
 
@@ -1777,7 +1817,16 @@ void loop() {
 
   // inject the new ranged distance in the people counting algorithm
   //------
-  RangingData = vl531Init_1(zone);
+  if ((zone == 0) | (zone == 1)) {
+    Serial.println("**Zone:");
+    Serial.print(zone); 
+    RangingData = vl531Init_1(zone);
+    Serial.println("**Distance1:");
+    Serial.print(RangingData); 
+    RangingData = vl531Init_2(zone);
+    Serial.println("**Distance2:");
+    Serial.print(RangingData); 
+  }
 
   client.loop();
   
@@ -1831,8 +1880,7 @@ void loop() {
   //Serial.println("**Zone:");
   //Serial.print(zone); 
 
-  //Serial.println("**Distance:");
-  //Serial.print(RangingData); 
+
 
   if (zone == 0)
     mqttDistance1 = RangingData;
