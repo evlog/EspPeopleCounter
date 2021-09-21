@@ -1789,7 +1789,7 @@ void loop() {
   char temp[50];
   String temp_str;
   unsigned long currentMillis = 0;
-  uint16_t RangingData;
+  uint16_t RangingData, RangingData2;
   float standardDev;
 
 
@@ -1821,11 +1821,11 @@ void loop() {
     Serial.println("**Zone:");
     Serial.print(zone); 
     RangingData = vl531Init_1(zone);
-    Serial.println("**Distance1:");
-    Serial.print(RangingData); 
-    RangingData = vl531Init_2(zone);
-    Serial.println("**Distance2:");
-    Serial.print(RangingData); 
+    Serial.print("**Distance1:");
+    Serial.println(RangingData); 
+    RangingData2 = vl531Init_2(zone);
+    Serial.print("**Distance2:");
+    Serial.println(RangingData2); 
   }
 
   client.loop();
