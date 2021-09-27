@@ -1819,31 +1819,31 @@ void loop() {
   // inject the new ranged distance in the people counting algorithm
   //------
   if (zone == 0) {
-    Serial.println("Zone:");
-    Serial.print(zone); 
+    Serial.print("Zone:");
+    Serial.println(zone); 
     RangingData = vl531Init_1(0);
-    Serial.print("**Distance:");
+    Serial.print("Distance:");
     Serial.println(RangingData); 
   }
   else if (zone == 1) {
-    Serial.println("Zone:");
-    Serial.print(zone); 
+    Serial.print("Zone:");
+    Serial.println(zone); 
     RangingData = vl531Init_2(0);
-    Serial.print("**Distance:");
+    Serial.print("Distance:");
     Serial.println(RangingData); 
   }
   else if (zone == 2) {
-    Serial.println("Zone:");
-    Serial.print(zone); 
+    Serial.print("Zone:");
+    Serial.println(zone); 
     RangingData = vl531Init_1(1);
-    Serial.print("**Distance:");
+    Serial.print("Distance:");
     Serial.println(RangingData); 
   }
   else if (zone == 3) {
-    Serial.println("Zone:");
-    Serial.print(zone); 
+    Serial.print("Zone:");
+    Serial.println(zone); 
     RangingData = vl531Init_2(1);
-    Serial.print("**Distance:");
+    Serial.print("Distance:");
     Serial.println(RangingData); 
   }
 
