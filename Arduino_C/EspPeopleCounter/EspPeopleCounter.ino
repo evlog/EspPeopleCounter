@@ -1887,11 +1887,11 @@ void loop() {
 
   peopleCounterVarPrev = peopleCounterVar;
   if (zone == 0)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0); //??
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0); 
   else if (zone == 1)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0);  
-  else if (zone == 2)
     peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
+  else if (zone == 2)
+    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0);  
   else if (zone == 3)
     peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
 
