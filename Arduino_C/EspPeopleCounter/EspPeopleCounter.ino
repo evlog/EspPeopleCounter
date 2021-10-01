@@ -1790,7 +1790,7 @@ void loop() {
   char temp[50];
   String temp_str;
   unsigned long currentMillis = 0;
-  uint16_t RangingData;
+  uint16_t RangingData1_0, RangingData2_0, RangingData1_1, RangingData2_1;
   float standardDev;
 
 
@@ -1818,40 +1818,51 @@ void loop() {
 
   // inject the new ranged distance in the people counting algorithm
   //------
-  if (zone == 0) {
-    Serial.print("Zone:");
-    Serial.println(zone); 
-    RangingData = vl531Init_1(0);
-    Serial.print("Distance:");
-    Serial.println(RangingData); 
-  }
-  else if (zone == 1) {
-    Serial.print("Zone:");
-    Serial.println(zone); 
-    RangingData = vl531Init_2(0);
-    Serial.print("Distance:");
-    Serial.println(RangingData); 
-  }
-  else if (zone == 2) {
-    Serial.print("Zone:");
-    Serial.println(zone); 
-    RangingData = vl531Init_1(1);
-    Serial.print("Distance:");
-    Serial.println(RangingData); 
-  }
-  else if (zone == 3) {
-    Serial.print("Zone:");
-    Serial.println(zone); 
-    RangingData = vl531Init_2(1);
-    Serial.print("Distance:");
-    Serial.println(RangingData); 
-  }
+  //if (zone == 0) {
+    //Serial.print("Zone:");
+    //Serial.println(zone); 
+    Serial.println("Acquiring measurements...");
+    RangingData1_0 = vl531Init_1(0);
+    //Serial.print("Distance:");
+    //Serial.println(RangingData); 
+  //}
+  //else if (zone == 1) {
+    //Serial.print("Zone:");
+    //Serial.println(zone); 
+    RangingData2_0 = vl531Init_2(0);
+    //Serial.print("Distance:");
+    //Serial.println(RangingData); 
+  //}
+  //else if (zone == 2) {
+    //Serial.print("Zone:");
+    //Serial.println(zone); 
+    RangingData1_1 = vl531Init_1(1);
+    //Serial.print("Distance:");
+    //Serial.println(RangingData); 
+  //}
+  //else if (zone == 3) {
+    //Serial.print("Zone:");
+    //Serial.println(zone); 
+    RangingData2_1 = vl531Init_2(1);
+    //Serial.print("Distance:");
+    //Serial.println(RangingData); 
+  //}
+  Serial.print("RangingData1_0:");
+  Serial.println(RangingData1_0);
 
+  Serial.print("RangingData2_0:");
+  Serial.println(RangingData2_0);
+
+  Serial.print("RangingData1_1:");
+  Serial.println(RangingData1_1);
+
+  Serial.print("RangingData2_1:");
+  Serial.println(RangingData2_1);
   client.loop();
   
   // Standard deviation calculation and checks
   //------
-  standardDev = computeStandardDev(RangingData);
+  standardDev = computeStandardDev(RangingData1_0);
   if (standardDev > ((float)SD_DEVIATION_THRESHOLD + 0.2)) {
     deviationHighFlagPrev = deviationHighFlag;
     deviationHighFlag = true;
@@ -1886,37 +1897,38 @@ void loop() {
   client.loop();
 
   peopleCounterVarPrev = peopleCounterVar;
-  if (zone == 0)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0); 
-  else if (zone == 1)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
-  else if (zone == 2)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 0);  
-  else if (zone == 3)
-    peopleCounterVar = ProcessPeopleCountingData(RangingData, 1);  
+  for(zone = 0;zone < 4;zone++) { 
+    if (zone == 0)
+      peopleCounterVar = ProcessPeopleCountingData(RangingData1_0, 0); 
+    else if (zone == 1)
+      peopleCounterVar = ProcessPeopleCountingData(RangingData1_1, 1);  
+    else if (zone == 2)
+      peopleCounterVar = ProcessPeopleCountingData(RangingData2_0, 0);  
+    else if (zone == 3)
+      peopleCounterVar = ProcessPeopleCountingData(RangingData2_1, 1);  
 
 
-  //Serial.println("**Zone:");
+  //Serial.println("**Zone:"); 
   //Serial.print(zone); 
 
 
 
-  if (zone == 0)
-    mqttDistance1 = RangingData;
-
-  if (zone == 1)
-    mqttDistance2 = RangingData;
-
-  if (zone == 2)
-    mqttDistance1 = RangingData;
-
-  if (zone == 3)
-    mqttDistance2 = RangingData;
-
-  zone++;
+    if (zone == 0)
+      mqttDistance1 = RangingData1_0;
+  
+    if (zone == 1)
+      mqttDistance2 = RangingData1_1;
+  
+    if (zone == 2)
+      mqttDistance1 = RangingData2_0;
+  
+    if (zone == 3)
+      mqttDistance2 = RangingData2_1;
+  }
+  //zone++;
   //zone = zone%2;
-  if (zone == 4)
-    zone = 0;
+  //if (zone == 4)
+  //  zone = 0;
 
   client.loop();
   //------
