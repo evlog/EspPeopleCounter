@@ -1594,7 +1594,7 @@ void setup() {
   //  Serial.println("setPhyMode failed");
   //WiFi.setOutputPower(20.5);
 
-  int x = 1;
+  int x = 0;
 
   // Try to connect on fixed WiFi SSID and if not start the wifiManager
   if (WIFI_MANAGER_ENABLE == 0) {
