@@ -164,7 +164,7 @@ int WIFI_MANAGER_ENABLE = 0;
 uint32_t  MEASUREMENT_BUDGET_MS = 33;
 
 // Define in ms how often to send ranging data for zone 1,2 over MQTT 
-uint32_t  RANGING_PERIOD_MS = 10000; // default is 10sec.
+uint32_t  RANGING_PERIOD_MS = 1000; // default is 10sec.
 
 // Define in ms how often to send people counter data over MQTT 
 uint32_t  PEOPLE_COUNTER_PERIOD_MS = 120000; //default is 2min. 
@@ -177,7 +177,7 @@ uint32_t  PEOPLE_COUNT_THRESHOLD_MM = 0;
 
 uint32_t INTER_MEASUREMENT_PERIOD_MS = 33;
 
-uint32_t DISTANCES_ARRAY_SIZE = 4;
+uint32_t DISTANCES_ARRAY_SIZE = 2;
 
 uint32_t MAX_DISTANCE = 33;
 
