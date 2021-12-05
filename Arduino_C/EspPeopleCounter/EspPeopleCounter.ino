@@ -1756,7 +1756,7 @@ void setup() {
   Serial.println("VL53L1X Quick Test");
 
   digitalWrite(SHUTDOWN_PIN1, HIGH);
-  if (distanceSensor1.begin() == 0) {
+  if (distanceSensor1.begin() != 0) {
     Serial.println("Sensor1 online!");
     distanceSensor1.setI2CAddress(0x29); // default
     Serial.print("Sensor1 I2C address: ");
@@ -1766,7 +1766,7 @@ void setup() {
     Serial.println("Sensor1 offline!");
 
   digitalWrite(SHUTDOWN_PIN2, HIGH);
-  if (distanceSensor2.begin() == 0) {
+  if (distanceSensor2.begin() != 0) {
     Serial.println("Sensor2 online!");
     distanceSensor2.setI2CAddress(0x30);
     Serial.print("Sensor2 I2C address: ");
